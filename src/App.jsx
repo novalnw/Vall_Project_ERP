@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import Scanner from './Scanner';
+import './erp/erp.css';
+import { ROLES, can, logAct } from './erp/ui';
+import { Pelanggan, Supplier, HargaSupplier } from './erp/Master';
+import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
+import { Pembayaran, Pengeluaran, KasBank } from './erp/Keuangan';
+import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
+import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
+import { Roles, Log, Pengaturan } from './erp/Sistem';
 
 // ================= Helper =================
 const parseHarga = (p) => Number(String(p ?? '').replace(/[^\d]/g, '')) || 0;
@@ -44,6 +52,37 @@ function genEAN13() {
 
 const emptyForm = { id: null, name: '', category: '', barcode: '', stock: '', minStock: '', price: '' };
 
+// ================= Menu =================
+const MENU = [
+  ['UTAMA', [
+    ['ringkasan', 'grid', 'Dashboard'],
+    ['invoice_baru', 'filePlus', 'Buat invoice'],
+    ['invoice', 'receipt', 'Daftar invoice'],
+    ['pembayaran', 'card', 'Pembayaran'],
+    ['pengeluaran', 'wallet', 'Pengeluaran'],
+    ['kas', 'bank', 'Kas & bank'],
+    ['roles', 'shield', 'Peran & akses'],
+    ['log', 'list', 'Log aktivitas'],
+  ]],
+  ['DATA BISNIS', [
+    ['pelanggan', 'users', 'Pelanggan'],
+    ['barang', 'box', 'Produk'],
+    ['supplier', 'truck', 'Supplier'],
+    ['po', 'cart', 'Purchase order'],
+    ['terima', 'inbox', 'Penerimaan barang'],
+    ['harga_supplier', 'tag', 'Harga supplier'],
+    ['opname', 'clipboard', 'Stock opname'],
+  ]],
+  ['LAPORAN', [
+    ['lap_jual', 'chart', 'Laporan penjualan'],
+    ['lap_pelanggan', 'users', 'Penjualan per pelanggan'],
+    ['mutasi', 'swap', 'Mutasi per barang'],
+    ['laba_rugi', 'trend', 'Laba rugi'],
+    ['riwayat', 'history', 'Riwayat opname'],
+  ]],
+  ['SISTEM', [['pengaturan', 'settings', 'Pengaturan']]],
+];
+
 // ================= Ikon & Logo =================
 const ICONS = {
   grid: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></>,
@@ -68,6 +107,22 @@ const ICONS = {
   zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
   barcode: <path d="M3 5v14M6 5v14M10 5v14M13 5v14M17 5v14M21 5v14" />,
   camera: <><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></>,
+  filePlus: <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6M12 18v-6M9 15h6" /></>,
+  receipt: <><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2V2l-3 2-3-2-3 2-3-2-3 2z" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
+  card: <><rect x="1" y="4" width="22" height="16" rx="2" /><path d="M1 10h22" /></>,
+  wallet: <><path d="M20 12V8a2 2 0 00-2-2H5a2 2 0 010-4h13" /><path d="M3 5v14a2 2 0 002 2h15a1 1 0 001-1v-4" /><path d="M18 12a2 2 0 000 4h4v-4z" /></>,
+  bank: <path d="M3 21h18M5 21V10M9 21V10M15 21V10M19 21V10M2 10l10-7 10 7z" />,
+  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+  list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
+  users: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8" /></>,
+  truck: <><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></>,
+  cart: <><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6" /></>,
+  inbox: <><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.5 5.1L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.9A2 2 0 0016.8 4H7.2a2 2 0 00-1.7 1.1z" /></>,
+  tag: <><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z" /><path d="M7 7h.01" /></>,
+  chart: <path d="M18 20V10M12 20V4M6 20v-6" />,
+  trend: <><path d="M23 6l-9.5 9.5-5-5L1 18" /><path d="M17 6h6v6" /></>,
+  swap: <><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 014-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 01-4 4H3" /></>,
+  settings: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
 };
 function Icon({ n, s = 18 }) {
   return (
@@ -120,8 +175,9 @@ function Stepper({ value, onChange, placeholder }) {
 // ================= Aplikasi =================
 export default function App() {
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [view, setView] = useState('landing'); // landing | login | register | dashboard
-  const [tab, setTab] = useState('ringkasan'); // ringkasan | barang | opname | riwayat
+  const [tab, setTab] = useState('ringkasan');
   const [theme, setTheme] = useState(() => localStorage.getItem('vall-theme') || 'light');
 
   const [email, setEmail] = useState('');
@@ -181,7 +237,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session) { fetchItems(); fetchLogs(); }
+    if (session) {
+      fetchItems(); fetchLogs();
+      supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => setProfile(data));
+    } else setProfile(null);
   }, [session]);
 
   const fetchItems = async () => {
@@ -218,7 +277,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setSession(null); setItems([]); setLogs([]); setCounts({}); setReady(false); setTab('ringkasan'); setLastScan(null);
+    setSession(null); setProfile(null); setItems([]); setLogs([]); setCounts({}); setReady(false); setTab('ringkasan'); setLastScan(null);
     setView('landing');
   };
 
@@ -235,6 +294,7 @@ export default function App() {
       ? await supabase.from('inventory').update(payload).eq('id', id)
       : await supabase.from('inventory').insert([payload]);
     if (error) return notify(error.code === '23505' ? 'Barcode itu sudah dipakai barang lain.' : 'Gagal menyimpan: ' + error.message, 'err');
+    logAct(session?.user?.email, id ? 'Ubah produk' : 'Tambah produk', name);
     notify(id ? 'Barang diperbarui.' : 'Barang ditambahkan.');
     setForm(null);
     fetchItems();
@@ -248,6 +308,7 @@ export default function App() {
       onOk: async () => {
         const { error } = await supabase.from('inventory').delete().eq('id', item.id);
         if (error) return notify('Gagal menghapus: ' + error.message, 'err');
+        logAct(session?.user?.email, 'Hapus produk', item.name);
         notify('Barang dihapus.');
         fetchItems();
       },
@@ -271,7 +332,11 @@ export default function App() {
         selisih: fisik - i.stock, user_email: session?.user?.email,
       });
       if (le) logFailed = true;
+      await supabase.from('stok_mutasi').insert({
+        item_id: i.id, item_name: i.name, jenis: 'opname', qty: fisik - i.stock, saldo: fisik, ref: 'Stock opname', dibuat_oleh: session?.user?.email,
+      });
     }
+    logAct(session?.user?.email, 'Terapkan opname', `${changes.length} barang`);
     setLoading(false);
     setCounts({}); setLastScan(null);
     notify(logFailed ? 'Stok diperbarui, tapi riwayat gagal dicatat.' : 'Opname diterapkan, stok diperbarui.', logFailed ? 'err' : 'ok');
@@ -304,6 +369,7 @@ export default function App() {
 
   // ---------- Data turunan ----------
   const nama = (session?.user?.email || '').split('@')[0];
+  const role = profile?.role || 'kasir';
   const categories = useMemo(() => [...new Set(items.map((i) => i.category).filter(Boolean))].sort(), [items]);
   const nAman = items.filter((i) => status(i) === 'aman').length;
   const nMenipis = items.filter((i) => status(i) === 'menipis').length;
@@ -372,7 +438,7 @@ export default function App() {
         <section className="lhero">
           <div className="lcopy">
             <h1>Stok gudang selalu cocok dengan isi rak</h1>
-            <p>Catat barang, pantau stok yang menipis, dan lakukan stock opname tanpa spreadsheet. Semua tersimpan di cloud dan bisa dibuka dari HP.</p>
+            <p>Dari invoice, pembayaran, pembelian, sampai stock opname dan laba rugi. Semua tersimpan di cloud dan bisa dibuka dari HP.</p>
             <div className="row">
               <button className="btn big" onClick={() => setView('register')}>Daftar gratis</button>
               <button className="btn ghost big" onClick={() => setView('login')}>Saya sudah punya akun</button>
@@ -397,10 +463,10 @@ export default function App() {
         </section>
 
         <section className="lfeat">
-          {[['zap', 'Stok real-time', 'Status aman, menipis, atau habis terlihat sekilas tanpa perlu hitung manual.'],
-            ['clipboard', 'Stock opname', 'Bandingkan hitungan fisik dengan sistem. Selisih langsung terhitung dan tercatat.'],
-            ['barcode', 'Scan barcode', 'Hitung stok cepat dengan alat scanner atau kamera, tanpa ketik satu per satu.'],
-            ['download', 'Ekspor CSV', 'Unduh data barang dan riwayat opname kapan saja untuk laporan.']].map(([ic, t, d]) => (
+          {[['receipt', 'Invoice & pembayaran', 'Buat invoice, catat pembayaran, dan pantau piutang. Stok berkurang otomatis.'],
+            ['cart', 'Pembelian', 'Purchase order, penerimaan barang, dan perbandingan harga supplier.'],
+            ['barcode', 'Stock opname', 'Hitung stok dengan scanner atau kamera, selisih langsung tercatat.'],
+            ['trend', 'Laporan', 'Laporan penjualan, mutasi barang, dan laba rugi siap diunduh.']].map(([ic, t, d]) => (
             <div key={t} className="fcard"><div className="ficon"><Icon n={ic} s={20} /></div><b>{t}</b><span>{d}</span></div>
           ))}
         </section>
@@ -422,7 +488,7 @@ export default function App() {
           <div>
             <h2>Gudang rapi, stok akurat, laporan siap.</h2>
             <ul>
-              <li><Icon n="check" s={16} /> Pantau stok menipis otomatis</li>
+              <li><Icon n="check" s={16} /> Invoice, pembayaran, dan kas dalam satu tempat</li>
               <li><Icon n="check" s={16} /> Stock opname dengan riwayat lengkap</li>
               <li><Icon n="check" s={16} /> Data aman di cloud, akses dari mana saja</li>
             </ul>
@@ -438,7 +504,7 @@ export default function App() {
           <form className="authform" onSubmit={isLogin ? handleLogin : handleRegister}>
             <span className="mlogo"><Logo size={30} /></span>
             <h1>{isLogin ? 'Selamat datang kembali' : 'Buat akun baru'}</h1>
-            <p className="muted">{isLogin ? 'Masuk untuk mengelola stok gudang kamu.' : 'Cukup email dan password, langsung bisa dipakai.'}</p>
+            <p className="muted">{isLogin ? 'Masuk untuk mengelola bisnis kamu.' : 'Cukup email dan password, langsung bisa dipakai.'}</p>
             <label className="field">Email
               <input type="email" autoComplete="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </label>
@@ -461,18 +527,33 @@ export default function App() {
   }
 
   // ================= DASHBOARD =================
-  const menu = [
-    ['ringkasan', 'grid', 'Ringkasan'],
-    ['barang', 'box', 'Barang'],
-    ['opname', 'clipboard', 'Stock opname'],
-    ['riwayat', 'history', 'Riwayat'],
-  ];
   const titles = {
-    ringkasan: ['Ringkasan', `Halo, ${nama}. Ini kondisi gudang hari ini.`],
-    barang: ['Barang', `${items.length} barang terdaftar`],
+    ringkasan: ['Dashboard', `Halo, ${nama}. Ini kondisi bisnis kamu hari ini.`],
+    invoice_baru: ['Buat invoice', 'Catat penjualan, stok berkurang otomatis'],
+    invoice: ['Daftar invoice', 'Pantau tagihan dan status pembayaran'],
+    pembayaran: ['Pembayaran', 'Riwayat pembayaran yang diterima'],
+    pengeluaran: ['Pengeluaran', 'Catat biaya operasional'],
+    kas: ['Kas & bank', 'Saldo dan mutasi akun'],
+    roles: ['Peran & akses', 'Atur siapa boleh membuka apa'],
+    log: ['Log aktivitas', 'Jejak aktivitas pengguna'],
+    pelanggan: ['Pelanggan', 'Data pelanggan'],
+    barang: ['Produk', `${items.length} produk terdaftar`],
+    supplier: ['Supplier', 'Data pemasok'],
+    po: ['Purchase order', 'Pesanan pembelian ke supplier'],
+    terima: ['Penerimaan barang', 'Barang dari PO menambah stok'],
+    harga_supplier: ['Harga supplier', 'Bandingkan harga beli antar supplier'],
     opname: ['Stock opname', 'Cocokkan stok fisik dengan stok sistem'],
+    lap_jual: ['Laporan penjualan', 'Rekap invoice per periode'],
+    lap_pelanggan: ['Penjualan per pelanggan', 'Pelanggan dengan kontribusi terbesar'],
+    mutasi: ['Mutasi per barang', 'Riwayat keluar masuk stok'],
+    laba_rugi: ['Laba rugi', 'Pendapatan, HPP, dan biaya'],
     riwayat: ['Riwayat opname', 'Catatan semua opname yang sudah diterapkan'],
+    pengaturan: ['Pengaturan', 'Profil usaha dan preferensi invoice'],
   };
+  const allowed = can(role, tab) || (tab === 'roles' && role === 'owner');
+  const cur = allowed ? tab : 'denied';
+  const go = (k) => { setTab(k); setQ(''); };
+  const P = { notify, ask: setConfirmBox, user: session?.user?.email, items, reload: fetchItems };
 
   const skRows = (cols) => [1, 2, 3].map((n) => <tr key={n}><td colSpan={cols}><div className="sk" style={{ height: 20 }} /></td></tr>);
 
@@ -483,15 +564,23 @@ export default function App() {
       <aside className="side">
         <Logo />
         <nav>
-          {menu.map(([k, ic, label]) => (
-            <button key={k} className={'nav' + (tab === k ? ' on' : '')} onClick={() => { setTab(k); setQ(''); }}>
-              <Icon n={ic} /> <span>{label}</span>
-            </button>
-          ))}
+          {MENU.map(([g, list]) => {
+            const vis = list.filter(([k]) => can(role, k));
+            return vis.length ? (
+              <React.Fragment key={g}>
+                <div className="navgroup">{g}</div>
+                {vis.map(([k, ic, label]) => (
+                  <button key={k} className={'nav' + (tab === k ? ' on' : '')} onClick={() => go(k)}>
+                    <Icon n={ic} /> <span>{label}</span>
+                  </button>
+                ))}
+              </React.Fragment>
+            ) : null;
+          })}
         </nav>
         <div className="me">
           <div className="avatar">{(nama[0] || '?').toUpperCase()}</div>
-          <div className="meinfo"><b>{nama}</b><small>{session?.user?.email}</small></div>
+          <div className="meinfo"><b>{nama}</b><small>{ROLES[role]}</small></div>
           <button className="iconbtn dark" onClick={handleLogout} aria-label="Logout" title="Logout"><Icon n="logout" /></button>
         </div>
       </aside>
@@ -500,7 +589,7 @@ export default function App() {
         <div className="top">
           <div className="toptitle">
             <span className="mlogo"><Logo size={28} text={false} /></span>
-            <div><h1>{titles[tab][0]}</h1><p className="muted">{titles[tab][1]}</p></div>
+            <div><h1>{(titles[tab] || ['VALLDev'])[0]}</h1><p className="muted">{(titles[tab] || [])[1]}</p></div>
           </div>
           <div className="row">
             {ThemeBtn}
@@ -508,13 +597,37 @@ export default function App() {
           </div>
         </div>
 
-        {/* ===== RINGKASAN ===== */}
-        {tab === 'ringkasan' && (
+        {cur === 'denied' && <EmptyState icon="shield" title="Tidak ada akses" text={`Peran ${ROLES[role]} tidak bisa membuka menu ini.`} />}
+
+        {/* ===== ERP: modul baru ===== */}
+        {cur === 'invoice_baru' && <BuatInvoice {...P} onDone={() => go('invoice')} />}
+        {cur === 'invoice' && <DaftarInvoice {...P} />}
+        {cur === 'pembayaran' && <Pembayaran {...P} />}
+        {cur === 'pengeluaran' && <Pengeluaran {...P} />}
+        {cur === 'kas' && <KasBank {...P} />}
+        {cur === 'roles' && <Roles {...P} me={profile} />}
+        {cur === 'log' && <Log />}
+        {cur === 'pelanggan' && <Pelanggan {...P} />}
+        {cur === 'supplier' && <Supplier {...P} />}
+        {cur === 'po' && <PurchaseOrder {...P} />}
+        {cur === 'terima' && <Penerimaan {...P} />}
+        {cur === 'harga_supplier' && <HargaSupplier {...P} />}
+        {cur === 'lap_jual' && <LaporanPenjualan />}
+        {cur === 'lap_pelanggan' && <PenjualanPelanggan />}
+        {cur === 'mutasi' && <MutasiBarang items={items} />}
+        {cur === 'laba_rugi' && <LabaRugi />}
+        {cur === 'pengaturan' && <Pengaturan {...P} />}
+
+        {/* ===== DASHBOARD ===== */}
+        {cur === 'ringkasan' && (
           <>
             <div className="actions">
-              <button className="btn" onClick={() => { setTab('barang'); setForm(emptyForm); }}><Icon n="plus" /> Tambah barang</button>
-              <button className="btn ghost" onClick={() => setTab('opname')}><Icon n="clipboard" /> Mulai opname</button>
+              {can(role, 'invoice_baru') && <button className="btn" onClick={() => go('invoice_baru')}><Icon n="filePlus" /> Buat invoice</button>}
+              <button className="btn ghost" onClick={() => { go('barang'); setForm(emptyForm); }}><Icon n="plus" /> Tambah produk</button>
+              <button className="btn ghost" onClick={() => go('opname')}><Icon n="clipboard" /> Mulai opname</button>
             </div>
+
+            {can(role, 'laba_rugi') && <FinanceSummary />}
 
             <div className="stats">
               {!ready ? [1, 2, 3, 4].map((n) => <div key={n} className="sk" style={{ height: 96 }} />) : (
@@ -573,8 +686,8 @@ export default function App() {
           </>
         )}
 
-        {/* ===== BARANG ===== */}
-        {tab === 'barang' && (
+        {/* ===== PRODUK ===== */}
+        {cur === 'barang' && (
           <>
             <div className="filters">
               <div className="search"><Icon n="search" s={16} /><input placeholder="Cari nama, kategori, atau barcode" value={q} onChange={(e) => setQ(e.target.value)} /></div>
@@ -588,13 +701,13 @@ export default function App() {
                 <option value="menipis">Menipis</option>
                 <option value="habis">Habis</option>
               </select>
-              <button className="btn ghost" onClick={() => exportCSV('barang', filtered.map((i) => ({ Nama: i.name, Kategori: i.category, Barcode: i.barcode, Stok: i.stock, 'Stok minimum': i.minStock, Harga: i.price })))}><Icon n="download" /> CSV</button>
-              <button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah barang</button>
+              <button className="btn ghost" onClick={() => exportCSV('produk', filtered.map((i) => ({ Nama: i.name, Kategori: i.category, Barcode: i.barcode, Stok: i.stock, 'Stok minimum': i.minStock, Harga: i.price, 'Harga beli': i.harga_beli })))}><Icon n="download" /> CSV</button>
+              <button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah produk</button>
             </div>
 
             <div className="tablewrap">
               <table>
-                <thead><tr><th>Barang</th><th>Kategori</th><th className="n">Stok</th><th className="n">Harga</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Produk</th><th>Kategori</th><th className="n">Stok</th><th className="n">Harga jual</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                   {!ready && skRows(6)}
                   {ready && filtered.map((i) => (
@@ -612,8 +725,8 @@ export default function App() {
                   ))}
                   {ready && !filtered.length && (
                     <tr><td colSpan="6">
-                      {items.length ? <EmptyState icon="search" title="Tidak ada barang yang cocok" text="Coba ubah kata kunci atau filter." />
-                        : <EmptyState title="Belum ada barang" text="Tambahkan barang pertama untuk mulai memantau stok." action={<button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah barang</button>} />}
+                      {items.length ? <EmptyState icon="search" title="Tidak ada produk yang cocok" text="Coba ubah kata kunci atau filter." />
+                        : <EmptyState title="Belum ada produk" text="Tambahkan produk pertama untuk mulai memantau stok." action={<button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah produk</button>} />}
                     </td></tr>
                   )}
                 </tbody>
@@ -623,7 +736,7 @@ export default function App() {
         )}
 
         {/* ===== STOCK OPNAME ===== */}
-        {tab === 'opname' && (
+        {cur === 'opname' && (
           <>
             <section className="card opbar">
               <div className="opprog">
@@ -680,8 +793,8 @@ export default function App() {
           </>
         )}
 
-        {/* ===== RIWAYAT ===== */}
-        {tab === 'riwayat' && (
+        {/* ===== RIWAYAT OPNAME ===== */}
+        {cur === 'riwayat' && (
           <>
             <div className="actions">
               <button className="btn ghost" disabled={!logs.length} onClick={() => exportCSV('riwayat-opname', logs.map((l) => ({ Waktu: tgl(l.created_at), Barang: l.item_name, Sistem: l.stok_sistem, Fisik: l.stok_fisik, Selisih: l.selisih, Petugas: l.user_email })))}><Icon n="download" /> Ekspor CSV</button>
@@ -698,7 +811,7 @@ export default function App() {
                       <td className="muted">{l.user_email}</td>
                     </tr>
                   ))}
-                  {!logs.length && <tr><td colSpan="6"><EmptyState icon="history" title="Belum ada riwayat" text="Terapkan opname pertama kamu, hasilnya akan muncul di sini." action={<button className="btn" onClick={() => setTab('opname')}>Mulai opname</button>} /></td></tr>}
+                  {!logs.length && <tr><td colSpan="6"><EmptyState icon="history" title="Belum ada riwayat" text="Terapkan opname pertama kamu, hasilnya akan muncul di sini." action={<button className="btn" onClick={() => go('opname')}>Mulai opname</button>} /></td></tr>}
                 </tbody>
               </table>
             </div>
@@ -706,12 +819,12 @@ export default function App() {
         )}
       </main>
 
-      {/* Modal tambah / ubah barang */}
+      {/* Modal tambah / ubah produk */}
       {form && (
         <div className="overlay" onMouseDown={() => setForm(null)}>
           <form className="modal" onMouseDown={(e) => e.stopPropagation()} onSubmit={handleSaveItem}>
-            <div className="mhead"><h3>{form.id ? 'Ubah barang' : 'Tambah barang'}</h3><button type="button" className="iconbtn sm" aria-label="Tutup" onClick={() => setForm(null)}>✕</button></div>
-            <label className="field">Nama barang<input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
+            <div className="mhead"><h3>{form.id ? 'Ubah produk' : 'Tambah produk'}</h3><button type="button" className="iconbtn sm" aria-label="Tutup" onClick={() => setForm(null)}>✕</button></div>
+            <label className="field">Nama produk<input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
             <label className="field">Kategori
               <input list="kategori" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required />
               <datalist id="kategori">{categories.map((c) => <option key={c} value={c} />)}</datalist>
@@ -727,7 +840,7 @@ export default function App() {
               <label className="field">Jumlah stok<input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} required /></label>
               <label className="field">Stok minimum<input type="number" min="0" placeholder="5" value={form.minStock} onChange={(e) => setForm({ ...form, minStock: e.target.value })} /></label>
             </div>
-            <label className="field">Harga<input placeholder="Cth: Rp 100.000" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required /></label>
+            <label className="field">Harga jual<input placeholder="Cth: Rp 100.000" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required /></label>
             <div className="row end">
               <button type="button" className="btn ghost" onClick={() => setForm(null)}>Batal</button>
               <button className="btn">Simpan</button>
@@ -796,6 +909,8 @@ small{color:var(--mut)}.block{display:block}.muted,.mut{color:var(--mut)}.center
 .btn:hover{background:var(--pri-d)}.btn:active{transform:translateY(1px)}.btn:disabled{opacity:.5;cursor:not-allowed}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btn.ghost:hover{background:var(--surface2)}
 .btn.danger{background:var(--bad)}.btn.danger:hover{background:#c93a3f}
+.btn.danger-t{color:var(--bad-ink)}
+.btn.sm{padding:6px 12px;font-size:.85rem;border-radius:8px}
 .btn.big{padding:14px 24px;font-size:1rem;border-radius:12px}.btn.full{width:100%}
 .iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;color:var(--mut);flex:none}
 .iconbtn:hover{color:var(--ink);background:var(--surface2)}.iconbtn.sm{width:32px;height:32px;border-radius:8px}.iconbtn.bad:hover{color:var(--bad)}
@@ -846,7 +961,7 @@ background:radial-gradient(700px 360px at 90% 0%,rgba(124,58,237,.14),transparen
 
 /* Dashboard */
 .shell{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
-.side{background:var(--side);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh}
+.side{background:var(--side);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
 .side .logo{padding:0 8px}.side .logotext b{color:#A5B4FC}
 .side nav{display:flex;flex-direction:column;gap:4px;flex:1}
 .nav{display:flex;align-items:center;gap:12px;background:transparent;border:0;color:#B4B3D6;padding:11px 12px;border-radius:10px;cursor:pointer;font-weight:600;text-align:left}
@@ -886,7 +1001,7 @@ table{width:100%;border-collapse:collapse;text-align:left}
 th{padding:13px 16px;color:var(--mut);font-weight:600;font-size:.82rem;background:var(--surface2);border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}tbody tr:last-child td{border-bottom:0}
 tbody tr:hover td{background:var(--surface2)}tr.diff td{background:var(--pri-soft)}
-.n{text-align:right}.act{white-space:nowrap;text-align:right}.act .iconbtn{margin-left:6px}
+.n{text-align:right}.act{white-space:nowrap;text-align:right}.act .iconbtn,.act .btn{margin-left:6px}
 .prod{display:flex;align-items:center;gap:12px}
 .pos{color:var(--ok-ink)}.neg{color:var(--bad-ink)}
 .cell-r{display:flex;justify-content:flex-end}
