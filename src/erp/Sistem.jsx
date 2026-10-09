@@ -5,6 +5,7 @@ import { EmptyRow, ErrorNote, Field, ROLES, ROLE_DESC, exportCSV, logAct, tgl, u
 // ================= Peran & akses =================
 export function Roles({ notify, user, me }) {
   const { rows, load, loading, error } = useTable('profiles', { order: 'created_at', asc: true });
+  const { rows: pel } = useTable('pelanggan', { order: 'nama', asc: true });
   const owner = me?.role === 'owner';
 
   async function ubah(r, role) {
@@ -13,25 +14,42 @@ export function Roles({ notify, user, me }) {
     logAct(user, 'Ubah peran', `${r.email} → ${ROLES[role]}`);
     notify('Peran diperbarui.'); load();
   }
+  async function hubung(r, v) {
+    const { error } = await supabase.from('profiles').update({ pelanggan_id: +v }).eq('id', r.id);
+    if (error) return notify(error.message, 'err');
+    logAct(user, 'Hubungkan akun pelanggan', r.email);
+    notify('Akun dihubungkan ke data pelanggan.'); load();
+  }
 
   return (
     <>
       <ErrorNote error={error} />
-      <p className="muted" style={{ marginBottom: 14 }}>Pengguna baru mendaftar sendiri lewat halaman Daftar, lalu pemilik usaha mengatur perannya di sini. Akun pertama otomatis menjadi pemilik.</p>
+      <div className="notice" style={{ background: 'var(--pri-soft)', color: 'var(--ink)' }}>
+        <b>Cara menambah admin atau staf:</b> orangnya daftar sendiri lewat halaman Daftar (otomatis jadi Pelanggan), lalu ubah perannya di sini.
+        Akun pertama yang mendaftar menjadi Pemilik usaha.
+      </div>
       <div className="tablewrap"><table>
-        <thead><tr><th>Pengguna</th><th>Email</th><th>Peran</th></tr></thead>
+        <thead><tr><th>Pengguna</th><th>Email</th><th>Peran</th><th>Terhubung ke pelanggan</th></tr></thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
               <td><b>{r.nama || '-'}</b></td><td>{r.email}</td>
               <td>
-                <select value={r.role} disabled={!owner || r.id === me?.id} onChange={(e) => ubah(r, e.target.value)} style={{ maxWidth: 200 }}>
+                <select value={r.role} disabled={!owner || r.id === me?.id} onChange={(e) => ubah(r, e.target.value)} style={{ maxWidth: 190 }}>
                   {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </td>
+              <td>
+                {r.role === 'pelanggan' ? (
+                  <select value={r.pelanggan_id ?? ''} disabled={!owner} onChange={(e) => hubung(r, e.target.value)} style={{ maxWidth: 220 }}>
+                    <option value="" disabled>Pilih pelanggan</option>
+                    {pel.map((p) => <option key={p.id} value={p.id}>{p.nama}</option>)}
+                  </select>
+                ) : <span className="muted">-</span>}
+              </td>
             </tr>
           ))}
-          {!rows.length && <EmptyRow cols={3} loading={loading} text="Belum ada pengguna." />}
+          {!rows.length && <EmptyRow cols={4} loading={loading} text="Belum ada pengguna." />}
         </tbody>
       </table></div>
       <h3 style={{ margin: '20px 0 10px' }}>Hak akses tiap peran</h3>

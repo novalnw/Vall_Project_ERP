@@ -71,8 +71,8 @@ export function BuatInvoice({ items, reload, notify, user, onDone }) {
 }
 
 // ================= Cetak =================
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function cetak(inv, lines, cfg) {
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+export function cetak(inv, lines, cfg) {
   const w = window.open('', '_blank');
   if (!w) return alert('Izinkan pop-up untuk mencetak.');
   const rows = lines.map((l) => `<tr><td>${esc(l.nama)}</td><td class="r">${l.qty}</td><td class="r">${rupiah(l.harga)}</td><td class="r">${rupiah(l.subtotal)}</td></tr>`).join('');

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import Scanner from './Scanner';
 import './erp/erp.css';
+import './erp/mobile.css';
 import { ROLES, can, logAct } from './erp/ui';
 import { Pelanggan, Supplier, HargaSupplier } from './erp/Master';
 import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
@@ -9,6 +10,7 @@ import { Pembayaran, Pengeluaran, KasBank } from './erp/Keuangan';
 import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
+import { PortalBeranda, PortalKatalog, PortalInvoice, PortalProfil } from './erp/Portal';
 
 // ================= Helper =================
 const parseHarga = (p) => Number(String(p ?? '').replace(/[^\d]/g, '')) || 0;
@@ -54,6 +56,12 @@ const emptyForm = { id: null, name: '', category: '', barcode: '', stock: '', mi
 
 // ================= Menu =================
 const MENU = [
+  ['AKUN SAYA', [
+    ['p_beranda', 'grid', 'Beranda'],
+    ['p_katalog', 'box', 'Katalog produk'],
+    ['p_invoice', 'receipt', 'Invoice saya'],
+    ['p_profil', 'users', 'Profil saya'],
+  ]],
   ['UTAMA', [
     ['ringkasan', 'grid', 'Dashboard'],
     ['invoice_baru', 'filePlus', 'Buat invoice'],
@@ -122,6 +130,8 @@ const ICONS = {
   chart: <path d="M18 20V10M12 20V4M6 20v-6" />,
   trend: <><path d="M23 6l-9.5 9.5-5-5L1 18" /><path d="M17 6h6v6" /></>,
   swap: <><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 014-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 01-4 4H3" /></>,
+  menu: <path d="M3 6h18M3 12h18M3 18h18" />,
+  close: <path d="M18 6L6 18M6 6l12 12" />,
   settings: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
 };
 function Icon({ n, s = 18 }) {
@@ -175,9 +185,10 @@ function Stepper({ value, onChange, placeholder }) {
 // ================= Aplikasi =================
 export default function App() {
   const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(undefined); // undefined = belum dimuat
   const [view, setView] = useState('landing'); // landing | login | register | dashboard
   const [tab, setTab] = useState('ringkasan');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('vall-theme') || 'light');
 
   const [email, setEmail] = useState('');
@@ -215,10 +226,37 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    const h = (e) => { if (e.key === 'Escape') { setForm(null); setConfirmBox(null); setCamera(null); } };
+    const h = (e) => { if (e.key === 'Escape') { setForm(null); setConfirmBox(null); setCamera(null); setMenuOpen(false); } };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
+
+  // Kunci scroll halaman saat menu HP terbuka
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
+  // Beri label otomatis pada sel tabel (dipakai tampilan kartu di HP)
+  useEffect(() => {
+    const root = document.querySelector('.content');
+    if (!root) return;
+    const label = () => {
+      root.querySelectorAll('table').forEach((t) => {
+        const heads = [...t.querySelectorAll('thead th')].map((h) => h.textContent.trim());
+        t.querySelectorAll('tbody tr').forEach((tr) => {
+          [...tr.children].forEach((td, i) => {
+            if (td.colSpan > 1 || !heads[i]) return;
+            if (td.getAttribute('data-label') !== heads[i]) td.setAttribute('data-label', heads[i]);
+          });
+        });
+      });
+    };
+    label();
+    const mo = new MutationObserver(label);
+    mo.observe(root, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [tab, view, profile]);
 
   useEffect(() => {
     if (lastScan) document.getElementById('row-' + lastScan.id)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -237,11 +275,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session) {
-      fetchItems(); fetchLogs();
-      supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => setProfile(data));
-    } else setProfile(null);
-  }, [session]);
+    if (!session) { setProfile(undefined); return; }
+    supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+      setProfile(data ?? null);
+      const pelanggan = !data || data.role === 'pelanggan';
+      if (!pelanggan) { fetchItems(); fetchLogs(); }
+      setTab(pelanggan ? 'p_beranda' : 'ringkasan');
+    });
+  }, [session?.user?.id]);
 
   const fetchItems = async () => {
     const { data, error } = await supabase.from('inventory').select('*').order('name');
@@ -277,7 +318,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setSession(null); setProfile(null); setItems([]); setLogs([]); setCounts({}); setReady(false); setTab('ringkasan'); setLastScan(null);
+    setSession(null); setProfile(null); setItems([]); setLogs([]); setCounts({}); setReady(false); setTab('ringkasan'); setLastScan(null); setMenuOpen(false);
     setView('landing');
   };
 
@@ -369,7 +410,7 @@ export default function App() {
 
   // ---------- Data turunan ----------
   const nama = (session?.user?.email || '').split('@')[0];
-  const role = profile?.role || 'kasir';
+  const role = profile?.role || 'pelanggan';
   const categories = useMemo(() => [...new Set(items.map((i) => i.category).filter(Boolean))].sort(), [items]);
   const nAman = items.filter((i) => status(i) === 'aman').length;
   const nMenipis = items.filter((i) => status(i) === 'menipis').length;
@@ -549,20 +590,37 @@ export default function App() {
     laba_rugi: ['Laba rugi', 'Pendapatan, HPP, dan biaya'],
     riwayat: ['Riwayat opname', 'Catatan semua opname yang sudah diterapkan'],
     pengaturan: ['Pengaturan', 'Profil usaha dan preferensi invoice'],
+    p_beranda: ['Beranda', `Halo, ${nama}. Ini ringkasan tagihanmu.`],
+    p_katalog: ['Katalog produk', 'Produk yang tersedia'],
+    p_invoice: ['Invoice saya', 'Tagihan dan pembayaran kamu'],
+    p_profil: ['Profil saya', 'Data kontak kamu'],
   };
   const allowed = can(role, tab) || (tab === 'roles' && role === 'owner');
   const cur = allowed ? tab : 'denied';
-  const go = (k) => { setTab(k); setQ(''); };
+  const go = (k) => { setTab(k); setQ(''); setMenuOpen(false); window.scrollTo(0, 0); };
   const P = { notify, ask: setConfirmBox, user: session?.user?.email, items, reload: fetchItems };
 
   const skRows = (cols) => [1, 2, 3].map((n) => <tr key={n}><td colSpan={cols}><div className="sk" style={{ height: 20 }} /></td></tr>);
 
+  if (profile === undefined) return <div className="center-load"><style>{CSS}</style>Memuat akun…</div>;
+
   return (
-    <div className="shell">
+    <div className={'shell' + (menuOpen ? ' menu-open' : '')}>
       <style>{CSS}</style>
 
-      <aside className="side">
-        <Logo />
+      {/* Bar atas khusus HP + tombol hamburger */}
+      <header className="mbar">
+        <button className="iconbtn" onClick={() => setMenuOpen(true)} aria-label="Buka menu" aria-expanded={menuOpen}><Icon n="menu" /></button>
+        <Logo size={28} />
+        {ThemeBtn}
+      </header>
+      <div className="scrim" onClick={() => setMenuOpen(false)} />
+
+      <aside className="side" aria-label="Menu utama">
+        <div className="side-head">
+          <Logo />
+          <button className="iconbtn dark closebtn" onClick={() => setMenuOpen(false)} aria-label="Tutup menu"><Icon n="close" /></button>
+        </div>
         <nav>
           {MENU.map(([g, list]) => {
             const vis = list.filter(([k]) => can(role, k));
@@ -599,7 +657,7 @@ export default function App() {
 
         {cur === 'denied' && <EmptyState icon="shield" title="Tidak ada akses" text={`Peran ${ROLES[role]} tidak bisa membuka menu ini.`} />}
 
-        {/* ===== ERP: modul baru ===== */}
+        {/* ===== ERP: modul ===== */}
         {cur === 'invoice_baru' && <BuatInvoice {...P} onDone={() => go('invoice')} />}
         {cur === 'invoice' && <DaftarInvoice {...P} />}
         {cur === 'pembayaran' && <Pembayaran {...P} />}
@@ -617,6 +675,12 @@ export default function App() {
         {cur === 'mutasi' && <MutasiBarang items={items} />}
         {cur === 'laba_rugi' && <LabaRugi />}
         {cur === 'pengaturan' && <Pengaturan {...P} />}
+
+        {/* ===== Portal pelanggan ===== */}
+        {cur === 'p_beranda' && <PortalBeranda me={profile} go={go} />}
+        {cur === 'p_katalog' && <PortalKatalog />}
+        {cur === 'p_invoice' && <PortalInvoice me={profile} />}
+        {cur === 'p_profil' && <PortalProfil me={profile} user={session?.user?.email} notify={notify} />}
 
         {/* ===== DASHBOARD ===== */}
         {cur === 'ringkasan' && (
@@ -1044,15 +1108,6 @@ tr.hl td{background:var(--warn-soft)!important}
   .lhero{grid-template-columns:1fr;padding:32px 24px 56px}.lcopy h1{font-size:2.2rem}.lnav{padding:16px 24px}.lfeat{padding:0 24px 40px}.mocktoast{right:8px}
   .authwrap{grid-template-columns:1fr}.authside{display:none}.mlogo{display:inline-flex}.authform .mlogo{margin-bottom:6px}
 }
-@media(max-width:860px){
-  .shell{grid-template-columns:1fr}
-  .side{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;flex-direction:row;padding:6px 8px;gap:0;z-index:30;border-top:1px solid rgba(255,255,255,.08)}
-  .side .logo,.side .me{display:none}.side nav{flex-direction:row;justify-content:space-around;gap:2px}
-  .nav{flex-direction:column;gap:2px;font-size:.68rem;padding:7px 10px;align-items:center;flex:1}
-  .nav.on{box-shadow:none}
-  .content{padding:18px 16px 96px}.logoutm{display:inline-grid}
-  .toast{bottom:84px;right:12px;left:12px;max-width:none}
-  h1{font-size:1.35rem}
-}
+@media(max-width:860px){h1{font-size:1.35rem}}
 @media(prefers-reduced-motion:reduce){.sk{animation:none}.track i{transition:none}}
 `;
