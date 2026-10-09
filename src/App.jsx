@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import Scanner from './Scanner';
 import './erp/erp.css';
-import './erp/mobile.css';
 import { ROLES, can, logAct } from './erp/ui';
 import { Pelanggan, Supplier, HargaSupplier } from './erp/Master';
 import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
@@ -1110,4 +1109,97 @@ tr.hl td{background:var(--warn-soft)!important}
 }
 @media(max-width:860px){h1{font-size:1.35rem}}
 @media(prefers-reduced-motion:reduce){.sk{animation:none}.track i{transition:none}}
+/* ===== HP: hamburger, drawer, tabel jadi kartu ===== */
+.mbar,.scrim,.closebtn{display:none}
+.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+@media(max-width:860px){
+  html,body{overflow-x:hidden}
+  .shell{display:block;grid-template-columns:none}
+
+  .mbar{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:40;
+    padding:max(10px,env(safe-area-inset-top)) 14px 10px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .mbar .logo{flex:1;min-width:0}
+
+  .shell .side{position:fixed;top:0;bottom:0;left:0;right:auto;width:min(84vw,310px);height:100vh;height:100dvh;
+    flex-direction:column;padding:16px 14px max(16px,env(safe-area-inset-bottom));gap:14px;z-index:60;
+    transform:translateX(-104%);visibility:hidden;transition:transform .25s ease,visibility 0s .25s;overflow:hidden}
+  .shell.menu-open .side{transform:none;visibility:visible;transition:transform .25s ease;box-shadow:0 0 40px rgba(0,0,0,.45)}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(14,13,36,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s}
+  .shell.menu-open .scrim{opacity:1;pointer-events:auto}
+  .closebtn{display:inline-grid}
+  .shell .side .logo{display:inline-flex}
+  .shell .side .me{display:flex}
+  .shell .side nav{flex:1;flex-direction:column;justify-content:flex-start;overflow-y:auto;overflow-x:hidden;gap:2px}
+  .shell .side .nav{flex:0 0 auto;flex-direction:row;align-items:center;gap:12px;width:100%;min-width:0;padding:12px;font-size:.95rem}
+  .shell .side .nav span{white-space:normal}
+  .shell .side .nav.on{box-shadow:inset 3px 0 var(--acc)}
+  .shell .side .navgroup{display:block}
+
+  .shell .content{padding:16px 14px 32px;width:100%}
+  .top{margin-bottom:16px}
+  .top .row,.top .mlogo{display:none!important}
+  .shell .logoutm{display:none}
+  .grid2,.cards{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{padding:14px}.stat b{font-size:1.2rem;overflow-wrap:anywhere}
+  .actions .btn{flex:1 1 140px}
+  .line{flex-wrap:wrap}
+  .donutrow{justify-content:center}
+  .sumbox{width:100%}
+
+  input,select{font-size:16px;min-height:44px}
+  .stepper input,input.mini{min-height:0}
+  .btn{min-height:44px}.btn.sm{min-height:36px}
+  .iconbtn{width:42px;height:42px}.iconbtn.sm{width:34px;height:34px}
+
+  .filters{gap:8px}
+  .filters .search,.filters>input,.filters .chk,.filters p.grow,.filters h3.grow{flex:1 1 100%}
+  .filters span.grow{display:none}
+  .filters select,.filters .btn,.filters .field.inl{flex:1 1 calc(50% - 4px);width:auto}
+  .filters .field.inl input{width:100%}
+
+  .tablewrap{overflow:visible;background:transparent;border:0;border-radius:0;box-shadow:none}
+  .tablewrap table,.tablewrap tbody{display:block;width:100%}
+  .tablewrap thead{display:none}
+  .tablewrap tbody tr{display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .tablewrap tbody tr:hover td{background:transparent}
+  .tablewrap td{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 0;
+    border-bottom:1px dashed var(--line);text-align:right;background:transparent!important}
+  .tablewrap td:last-child{border-bottom:0}
+  .tablewrap td::before{content:attr(data-label);color:var(--mut);font-size:.78rem;font-weight:600;text-align:left;flex:none;max-width:42%}
+  .tablewrap td:not([data-label])::before,.tablewrap td:first-child::before,.tablewrap td[colspan]::before{content:none}
+  .tablewrap td:first-child{justify-content:flex-start;text-align:left;font-size:1rem;padding-top:10px}
+  .tablewrap td[colspan]{display:block;text-align:center}
+  .tablewrap td.act{justify-content:flex-end;flex-wrap:wrap;white-space:normal}
+  .tablewrap td.n{text-align:right}
+  tr.diff{background:var(--pri-soft)!important}
+  tr.hl{background:var(--warn-soft)!important}
+
+  .overlay{align-items:end;padding:0}
+  .modal,.modal.wide,.modal.sm,.modal.scan{max-width:none;width:100%;max-height:92vh;max-height:92dvh;border-radius:20px 20px 0 0;
+    padding:18px 16px max(18px,env(safe-area-inset-bottom));animation:sheet .22s ease}
+  .modal.sm{align-items:stretch}
+  @keyframes sheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .two3{grid-template-columns:1fr}
+
+  .invform{grid-template-columns:1fr}
+  .lrow{grid-template-columns:1fr 1fr 40px;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
+  .lrow select{grid-column:1 / -1}
+  .lrow input[aria-label="Harga"]{grid-column:2 / 4}
+  .lrow .lsub{grid-column:1 / 3;text-align:left}
+
+  .opbar{flex-direction:column;align-items:stretch}
+  .opbar .row .btn{flex:1 1 calc(50% - 4px)}
+  .scanform .btn{flex:1 1 100%}
+
+  .lnav{padding:12px 14px}.lnav .row{gap:6px}.lnav .btn{padding:8px 12px;min-height:40px}
+  .lhero{padding:20px 16px 48px;gap:28px}.lcopy h1{font-size:1.9rem}.lcopy p{font-size:1rem}
+  .lcopy .row .btn{flex:1 1 100%}
+  .lmock{margin-bottom:24px}
+  .lfeat{padding:0 16px 32px}
+  .authmain{padding:16px}.authform{padding:16px 0}
+
+  body .toast{left:12px;right:12px;bottom:16px;max-width:none}
+}
 `;
