@@ -3,13 +3,15 @@ import { supabase } from './supabaseClient';
 import Scanner from './Scanner';
 import './erp/erp.css';
 import { ROLES, can, logAct } from './erp/ui';
-import { Pelanggan, Supplier, HargaSupplier } from './erp/Master';
+import { Supplier, HargaSupplier } from './erp/Master';
+import Pelanggan from './erp/Pelanggan';
+import { PesananMasuk, KonfirmasiBayar, usePending } from './erp/Permintaan';
 import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
 import { Pembayaran, Pengeluaran, KasBank } from './erp/Keuangan';
 import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
-import { PortalBeranda, PortalKatalog, PortalInvoice, PortalProfil } from './erp/Portal';
+import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
 
 // ================= Helper =================
 const parseHarga = (p) => Number(String(p ?? '').replace(/[^\d]/g, '')) || 0;
@@ -57,8 +59,9 @@ const emptyForm = { id: null, name: '', category: '', barcode: '', stock: '', mi
 const MENU = [
   ['AKUN SAYA', [
     ['p_beranda', 'grid', 'Beranda'],
-    ['p_katalog', 'box', 'Katalog produk'],
-    ['p_invoice', 'receipt', 'Invoice saya'],
+    ['p_pesan', 'cart', 'Pesan sekarang'],
+    ['p_pesanan', 'inbox', 'Pesanan saya'],
+    ['p_invoice', 'receipt', 'Tagihan & bayar'],
     ['p_profil', 'users', 'Profil saya'],
   ]],
   ['UTAMA', [
@@ -66,6 +69,8 @@ const MENU = [
     ['invoice_baru', 'filePlus', 'Buat invoice'],
     ['invoice', 'receipt', 'Daftar invoice'],
     ['pembayaran', 'card', 'Pembayaran'],
+    ['pesanan', 'cart', 'Pesanan masuk'],
+    ['konfirmasi', 'check', 'Konfirmasi bayar'],
     ['pengeluaran', 'wallet', 'Pengeluaran'],
     ['kas', 'bank', 'Kas & bank'],
     ['roles', 'shield', 'Peran & akses'],
@@ -410,6 +415,7 @@ export default function App() {
   // ---------- Data turunan ----------
   const nama = (session?.user?.email || '').split('@')[0];
   const role = profile?.role || 'pelanggan';
+  const pend = usePending(role, tab);
   const categories = useMemo(() => [...new Set(items.map((i) => i.category).filter(Boolean))].sort(), [items]);
   const nAman = items.filter((i) => status(i) === 'aman').length;
   const nMenipis = items.filter((i) => status(i) === 'menipis').length;
@@ -593,6 +599,11 @@ export default function App() {
     p_katalog: ['Katalog produk', 'Produk yang tersedia'],
     p_invoice: ['Invoice saya', 'Tagihan dan pembayaran kamu'],
     p_profil: ['Profil saya', 'Data kontak kamu'],
+    pesanan: ['Pesanan masuk', 'Pesanan pelanggan yang perlu disetujui'],
+    konfirmasi: ['Konfirmasi bayar', 'Pembayaran pelanggan dan nota'],
+    p_pesan: ['Pesan sekarang', 'Pilih produk lalu kirim pesanan'],
+    p_pesanan: ['Pesanan saya', 'Status pesanan kamu'],
+    p_invoice: ['Tagihan & bayar', 'Tunggakan, pembayaran, dan nota'],
   };
   const allowed = can(role, tab) || (tab === 'roles' && role === 'owner');
   const cur = allowed ? tab : 'denied';
@@ -628,7 +639,7 @@ export default function App() {
                 <div className="navgroup">{g}</div>
                 {vis.map(([k, ic, label]) => (
                   <button key={k} className={'nav' + (tab === k ? ' on' : '')} onClick={() => go(k)}>
-                    <Icon n={ic} /> <span>{label}</span>
+                    <Icon n={ic} /> <span>{label}</span>{k === 'pesanan' && pend.pesanan > 0 && <em className="cnt">{pend.pesanan}</em>}{k === 'konfirmasi' && pend.bayar > 0 && <em className="cnt">{pend.bayar}</em>}
                   </button>
                 ))}
               </React.Fragment>
@@ -676,11 +687,13 @@ export default function App() {
         {cur === 'pengaturan' && <Pengaturan {...P} />}
 
         {/* ===== Portal pelanggan ===== */}
-        {cur === 'p_beranda' && <PortalBeranda me={profile} go={go} />}
-        {cur === 'p_katalog' && <PortalKatalog />}
-        {cur === 'p_invoice' && <PortalInvoice me={profile} />}
+        {cur === 'pesanan' && <PesananMasuk {...P} />}
+        {cur === 'konfirmasi' && <KonfirmasiBayar {...P} />}
+        {cur === 'p_beranda' && <PortalBeranda me={profile} go={go} notify={notify} />}
+        {cur === 'p_pesan' && <PortalPesan go={go} notify={notify} />}
+        {cur === 'p_pesanan' && <PortalPesanan go={go} notify={notify} />}
+        {cur === 'p_invoice' && <PortalInvoice me={profile} notify={notify} />}
         {cur === 'p_profil' && <PortalProfil me={profile} user={session?.user?.email} notify={notify} />}
-
         {/* ===== DASHBOARD ===== */}
         {cur === 'ringkasan' && (
           <>

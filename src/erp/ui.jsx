@@ -11,12 +11,12 @@ export const ROLE_DESC = {
   gudang: 'Produk, supplier, PO, penerimaan, harga supplier, opname, dan mutasi stok.',
   pelanggan: 'Portal pelanggan: katalog, invoice, dan pembayaran miliknya sendiri.',
 };
-const ACCESS = {
+  const ACCESS = {
   owner: '*',
-  admin: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan'],
-  kasir: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan'],
+  admin: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan'],
+  kasir: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan'],
   gudang: ['ringkasan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'mutasi', 'riwayat'],
-  pelanggan: ['p_beranda', 'p_katalog', 'p_invoice', 'p_profil'],
+  pelanggan: ['p_beranda', 'p_pesan', 'p_pesanan', 'p_invoice', 'p_profil'],
 };
 // menu portal (p_*) hanya untuk pelanggan; menu ERP hanya untuk staf
 export const can = (role, tab) =>

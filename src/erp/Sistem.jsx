@@ -93,7 +93,7 @@ export function Pengaturan({ notify, user }) {
     e.preventDefault();
     const { error } = await supabase.from('pengaturan').upsert({
       id: 1, nama_usaha: f.nama_usaha, alamat: f.alamat, telepon: f.telepon,
-      prefix_invoice: (f.prefix_invoice || 'INV').toUpperCase(), ppn_persen: +f.ppn_persen || 0, jatuh_tempo_hari: +f.jatuh_tempo_hari || 0,
+      prefix_invoice: (f.prefix_invoice || 'INV').toUpperCase(), ppn_persen: +f.ppn_persen || 0, jatuh_tempo_hari: +f.jatuh_tempo_hari || 0, info_bayar: f.info_bayar || null,
     });
     if (error) return notify(error.message, 'err');
     logAct(user, 'Ubah pengaturan', f.nama_usaha); notify('Pengaturan disimpan.'); reload();
@@ -114,6 +114,10 @@ export function Pengaturan({ notify, user }) {
         <Field label="PPN default (%)"><input type="number" min="0" step="0.5" value={f.ppn_persen ?? 0} onChange={set('ppn_persen')} /></Field>
         <Field label="Jatuh tempo (hari)"><input type="number" min="0" value={f.jatuh_tempo_hari ?? 14} onChange={set('jatuh_tempo_hari')} /></Field>
       </div>
+            <h3>Pembayaran pelanggan</h3>
+      <Field label="Rekening atau info pembayaran (tampil di portal pelanggan)">
+        <textarea rows="3" value={f.info_bayar || ''} onChange={set('info_bayar')} placeholder={'BCA 1234567890 a.n. Nama Usaha\nQRIS: ...'} />
+      </Field>
       <div className="row end"><button className="btn">Simpan pengaturan</button></div>
     </form>
   );
