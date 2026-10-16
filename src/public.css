@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-/* --- Tema Terang (Default) --- */
+/* --- Tema Terang (default) --- */
 .pubbody{margin:0;background:#F5F0E6}
 
 .pub{
@@ -9,14 +9,14 @@
   min-height:100vh;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s;
 }
 
-/* --- Tema Gelap (Dark Mode) --- */
-.pub[data-theme="dark"] {
+/* --- Tema Gelap --- */
+.pub[data-theme="dark"]{
   --paper:#121815;--card:#1A231E;--ink:#EFE8D8;--mut:#9EABA2;--line:#2A3831;
   --acc:#FF7A59;--acc-d:#C2410C;--green:#3E8E68;--input-bg:#121815;--input-text:#EFE8D8;
 }
 
 .pub *,.pub *::before,.pub *::after{box-sizing:border-box}
-.pub h1,.pub h2,.pub h3,.pub p,.pub ul,.pub ol,.pub figure{margin:0;padding:0}
+.pub :where(h1,h2,h3,p,ul,ol,figure){margin:0;padding:0}
 .pub ul,.pub ol{list-style:none}
 .pub button,.pub input{font:inherit;color:inherit}
 .pub :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
@@ -39,7 +39,7 @@
 .pb-link{background:none;border:0;padding:6px 2px;font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--acc);text-underline-offset:4px;color:var(--ink)}
 .pb-link:hover{color:var(--acc-d)}
 
-/* Tombol Ikon Tema */
+/* Tombol ikon tema */
 .pb-theme-btn{background:var(--card);border:1.5px solid var(--ink);width:40px;height:40px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);box-shadow:2px 2px 0 var(--ink);transition:transform .08s,box-shadow .08s}
 .pb-theme-btn:hover{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
 
@@ -86,13 +86,15 @@
 
 /* Masuk, daftar, lupa & reset password */
 .pb-auth{display:grid;grid-template-columns:minmax(320px,5fr) 7fr}
-.pb-side{background-color:var(--ink);background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.045) 31px 32px);color:#EFE8D8;padding:36px 40px;display:flex;flex-direction:column;justify-content:space-between;gap:32px}
+/* Panel kiri dikunci gelap di kedua tema supaya teks tetap terbaca */
+.pb-side{background-color:#17221C;background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.045) 31px 32px);color:#EFE8D8;padding:36px 40px;display:flex;flex-direction:column;justify-content:space-between;gap:32px}
 .pb-side h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.15;margin-bottom:28px;max-width:380px}
 .pb-side li{display:flex;gap:14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.18);font-size:.98rem}
 .pb-side li span{font-family:'IBM Plex Mono',monospace;color:#F0A27A}
 .pb-side small{color:#A9B3AC}
 
 .pb-main{display:flex;flex-direction:column;padding:28px 40px;background:var(--paper)}
+.pb-topbar-auth{display:flex;justify-content:space-between;align-items:center;width:100%}
 .pb-back{align-self:flex-start;background:none;border:0;padding:6px 0;color:var(--mut);font-weight:500;cursor:pointer}
 .pb-back:hover{color:var(--ink)}
 .pb-form{width:100%;max-width:400px;margin:auto;display:flex;flex-direction:column;gap:18px;padding:32px 0}
@@ -110,15 +112,65 @@
 .pb-end{display:flex;justify-content:flex-end;margin-top:-6px}
 .pb-alt{text-align:center;color:var(--mut)}
 
-.pb-topbar-auth {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
 .pb-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1C2B24;color:#F5F0E6;padding:12px 18px;border-radius:6px;border:1.5px solid #1C2B24;font-family:'IBM Plex Sans',system-ui,sans-serif;z-index:100;max-width:calc(100vw - 32px);box-shadow:4px 4px 0 rgba(0,0,0,.25)}
 .pb-toast.err{background:#9A2A12;border-color:#9A2A12}
+
+/* ===== Animasi ===== */
+.pb-hero h1 em{
+  background:linear-gradient(var(--ink),var(--ink)) no-repeat 0 94% / 0% 3px;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+  animation:pbUnder 6s ease-in-out infinite;
+}
+@keyframes pbUnder{0%{background-size:0% 3px}45%,80%{background-size:100% 3px}100%{background-size:0% 3px}}
+
+.pb-cta .pb-btn.solid{animation:pbNudge 3.6s ease-in-out infinite}
+.pb-cta .pb-btn.solid:hover{animation:none}
+@keyframes pbNudge{
+  0%,72%,100%{transform:none;box-shadow:3px 3px 0 var(--ink)}
+  80%{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+  88%{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+}
+
+.pb-nota{animation:pbFloat 6s ease-in-out infinite}
+@keyframes pbFloat{
+  0%,100%{transform:rotate(2deg) translateY(0)}
+  50%{transform:rotate(.8deg) translateY(-10px)}
+}
+.pb-nota li,.pb-nota-total{
+  animation:pbRow 9s ease infinite both;
+  animation-delay:calc(var(--d,0) * .6s + .4s);
+}
+@keyframes pbRow{
+  0%{opacity:0;transform:translateY(8px)}
+  6%,72%{opacity:1;transform:none}
+  80%,100%{opacity:0;transform:none}
+}
+.pb-stamp{animation:pbStamp 9s ease infinite both;animation-delay:2.9s}
+@keyframes pbStamp{
+  0%{opacity:0;transform:rotate(-12deg) scale(2.4)}
+  6%{opacity:.9;transform:rotate(-12deg) scale(.92)}
+  10%,40%{opacity:.9;transform:rotate(-12deg) scale(1)}
+  46%,100%{opacity:0;transform:rotate(-12deg) scale(1)}
+}
+
+.pb-steps li{animation:pbStep 8s ease-in-out infinite;animation-delay:calc(var(--i,0) * 2s)}
+@keyframes pbStep{
+  0%,100%{background:transparent}
+  3%,22%{background:color-mix(in srgb,var(--acc) 16%,transparent)}
+  26%{background:transparent}
+}
+
+.pb-ticker{overflow:hidden;background:var(--ink);color:var(--paper);border-block:1.5px solid var(--ink)}
+.pb-track{display:flex;width:max-content;animation:pbTick 48s linear infinite}
+.pb-track span{flex:none;padding:13px 0 13px 34px;font-family:'IBM Plex Mono',monospace;font-size:.84rem;letter-spacing:.04em;white-space:nowrap}
+.pb-track span::after{content:'◆';margin-left:34px;color:var(--acc)}
+@keyframes pbTick{to{transform:translateX(-25%)}}
+
+/* Pengguna yang memilih "kurangi gerakan" tidak melihat animasi */
+@media(prefers-reduced-motion:reduce){
+  .pb-hero h1 em{animation:none;background-size:100% 3px}
+  .pb-cta .pb-btn.solid,.pb-nota,.pb-nota li,.pb-nota-total,.pb-stamp,.pb-steps li,.pb-track{animation:none}
+}
 
 /* Tablet & HP */
 @media(max-width:900px){
@@ -141,5 +193,4 @@
   .pb-steps li:last-child{border-bottom:0}
   .pb-isi li{grid-template-columns:1fr;gap:4px}
   .pb-cta .pb-btn{flex:1 1 100%}
-  .pb-nota{transform:rotate(1.5deg)}
 }

@@ -38,6 +38,16 @@ const ISI = [
   ['Peran dan akses', 'Pemilik, admin, kasir, gudang, dan pelanggan punya batas masing-masing.'],
 ];
 
+const TICK = [
+  'Stok masuk +24 pcs',
+  'Invoice INV-2610-0012 lunas',
+  'Pesanan baru menunggu persetujuan',
+  'Opname selesai, 2 selisih diperbarui',
+  'Nota NT-2610-0007 dicetak',
+  'Stok menipis: Tas Kecil',
+  'Pembayaran dikonfirmasi',
+];
+
 function Landing({ go, theme, toggleTheme }) {
   return (
     <div className="pub" data-theme={theme}>
@@ -72,23 +82,29 @@ function Landing({ go, theme, toggleTheme }) {
             <div className="pb-nota-head"><b>Toko Contoh</b><span>NT-2610-0001</span></div>
             <div className="pb-nota-meta">13 Okt 2026 · Transfer</div>
             <ul>
-              <li><span>Kaos Polos x2</span><span>96.000</span></li>
-              <li><span>Topi Snapback x1</span><span>55.000</span></li>
-              <li><span>Tas Kecil x1</span><span>23.000</span></li>
+              <li style={{ '--d': 0 }}><span>Kaos Polos x2</span><span>96.000</span></li>
+              <li style={{ '--d': 1 }}><span>Topi Snapback x1</span><span>55.000</span></li>
+              <li style={{ '--d': 2 }}><span>Tas Kecil x1</span><span>23.000</span></li>
             </ul>
-            <div className="pb-nota-total"><span>Total</span><span>Rp 174.000</span></div>
+            <div className="pb-nota-total" style={{ '--d': 3 }}><span>Total</span><span>Rp 174.000</span></div>
             <div className="pb-stamp">LUNAS</div>
           </div>
           <figcaption>Contoh tampilan nota</figcaption>
         </figure>
       </section>
 
+      <div className="pb-ticker" aria-hidden="true">
+        <div className="pb-track">
+          {[...TICK, ...TICK, ...TICK, ...TICK].map((t, i) => <span key={i}>{t}</span>)}
+        </div>
+      </div>
+
       <section className="pb-sec">
         <p className="pb-label">Alur</p>
         <h2>Dari pesanan sampai nota</h2>
         <ol className="pb-steps">
-          {STEPS.map(([n, t, d]) => (
-            <li key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></li>
+          {STEPS.map(([n, t, d], i) => (
+            <li key={n} style={{ '--i': i }}><span>{n}</span><h3>{t}</h3><p>{d}</p></li>
           ))}
         </ol>
       </section>
