@@ -12,6 +12,7 @@ import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
 import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
+import PublicPages from './Public';
 
 // ================= Helper =================
 const parseHarga = (p) => Number(String(p ?? '').replace(/[^\d]/g, '')) || 0;
@@ -110,8 +111,6 @@ const ICONS = {
   trash: <><path d="M3 6h18" /><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   moon: <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />,
-  eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></>,
-  eyeOff: <><path d="M17.9 17.9A10.9 10.9 0 0112 20C5 20 1 12 1 12a18 18 0 015.1-5.9M9.9 4.2A9.1 9.1 0 0112 4c7 0 11 8 11 8a18 18 0 01-2.2 3.2" /><path d="M1 1l22 22" /></>,
   alert: <><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /><path d="M12 9v4M12 17h.01" /></>,
   layers: <><path d="M12 2l10 5-10 5L2 7l10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></>,
   coins: <><path d="M12 1v22" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></>,
@@ -485,156 +484,18 @@ export default function App() {
     </div>
   );
 
-  // ================= LANDING =================
-  if (view === 'landing') {
+  // ================= HALAMAN SEBELUM LOGIN =================
+  if (['landing', 'login', 'register', 'forgot', 'reset'].includes(view)) {
     return (
-      <div className="landing">
+      <>
         <style>{CSS}</style>
-        <header className="lnav">
-          <Logo />
-          <div className="row">
-            {ThemeBtn}
-            <button className="btn ghost" onClick={() => setView('login')}>Login</button>
-            <button className="btn" onClick={() => setView('register')}>Daftar</button>
-          </div>
-        </header>
-
-        <section className="lhero">
-          <div className="lcopy">
-            <h1>Stok gudang selalu cocok dengan isi rak</h1>
-            <p>Dari invoice, pembayaran, pembelian, sampai stock opname dan laba rugi. Semua tersimpan di cloud dan bisa dibuka dari HP.</p>
-            <div className="row">
-              <button className="btn big" onClick={() => setView('register')}>Daftar gratis</button>
-              <button className="btn ghost big" onClick={() => setView('login')}>Saya sudah punya akun</button>
-            </div>
-          </div>
-
-          <div className="lmock" aria-hidden="true">
-            <div className="mockhead"><Logo size={22} /><span className="chip">Hari ini</span></div>
-            <div className="mockstats">
-              <div><b>128</b><span>Jenis barang</span></div>
-              <div><b>1.940</b><span>Total unit</span></div>
-              <div className="w"><b>6</b><span>Perlu restock</span></div>
-            </div>
-            {[['Kaos Polos', '48 pcs', 'aman'], ['Sepatu Lari', '4 pcs', 'menipis'], ['Topi Snapback', '21 pcs', 'aman'], ['Tas Ransel', '0 pcs', 'habis']].map(([n, s, st]) => (
-              <div className="mockrow" key={n}>
-                <span className="av" style={{ background: `hsl(${hue(n)} 70% 92%)`, color: `hsl(${hue(n)} 55% 32%)` }}>{n[0]}</span>
-                <span className="mn">{n}</span><span className="ms">{s}</span><Badge s={st} />
-              </div>
-            ))}
-            <div className="mocktoast"><Icon n="check" s={16} /> Opname selesai, 2 selisih diperbarui</div>
-          </div>
-        </section>
-
-        <section className="lfeat">
-          {[['receipt', 'Invoice & pembayaran', 'Buat invoice, catat pembayaran, dan pantau piutang. Stok berkurang otomatis.'],
-            ['cart', 'Pembelian', 'Purchase order, penerimaan barang, dan perbandingan harga supplier.'],
-            ['barcode', 'Stock opname', 'Hitung stok dengan scanner atau kamera, selisih langsung tercatat.'],
-            ['trend', 'Laporan', 'Laporan penjualan, mutasi barang, dan laba rugi siap diunduh.']].map(([ic, t, d]) => (
-            <div key={t} className="fcard"><div className="ficon"><Icon n={ic} s={20} /></div><b>{t}</b><span>{d}</span></div>
-          ))}
-        </section>
-
-        <footer className="lfoot">&copy; CopyRight By VALL Devolopment</footer>
-        {Toast}
-      </div>
-    );
-  }
-
-  // ================= LUPA & RESET PASSWORD =================
-  if (view === 'forgot' || view === 'reset') {
-    const isReset = view === 'reset';
-    return (
-      <div className="authwrap">
-        <style>{CSS}</style>
-        <aside className="authside">
-          <Logo size={38} />
-          <div><h2>{isReset ? 'Buat password baru' : 'Atur ulang password'}</h2></div>
-          <small>&copy; 2026 VALL Devolopment</small>
-        </aside>
-        <main className="authmain">
-          <div className="authtop">
-            <button className="linkbtn" onClick={() => setView(isReset ? 'dashboard' : 'login')}>← Kembali</button>
-            {ThemeBtn}
-          </div>
-          {isReset ? (
-            <form className="authform" onSubmit={handleReset}>
-              <span className="mlogo"><Logo size={30} /></span>
-              <h1>Buat password baru</h1>
-              <p className="muted">Masukkan password baru untuk akunmu.</p>
-              <label className="field">Password baru
-                <div className="pw">
-                  <input type={showPw ? 'text' : 'password'} autoComplete="new-password" placeholder="Minimal 6 karakter" value={newPw} onChange={(e) => setNewPw(e.target.value)} required />
-                  <button type="button" aria-label="Tampilkan password" onClick={() => setShowPw(!showPw)}><Icon n={showPw ? 'eyeOff' : 'eye'} /></button>
-                </div>
-              </label>
-              <button className="btn big full" disabled={loading}>{loading ? 'Menyimpan…' : 'Simpan password'}</button>
-            </form>
-          ) : (
-            <form className="authform" onSubmit={handleForgot}>
-              <span className="mlogo"><Logo size={30} /></span>
-              <h1>Lupa password?</h1>
-              <p className="muted">Masukkan email akunmu, kami kirim tautan untuk membuat password baru.</p>
-              <label className="field">Email
-                <input type="email" autoComplete="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </label>
-              <button className="btn big full" disabled={loading}>{loading ? 'Mengirim…' : 'Kirim tautan reset'}</button>
-              <p className="muted center"><button type="button" className="linkbtn" onClick={() => setView('login')}>Kembali ke login</button></p>
-            </form>
-          )}
-        </main>
-        {Toast}
-      </div>
-    );
-  }
-
-  // ================= LOGIN & REGISTER =================
-  if (view === 'login' || view === 'register') {
-    const isLogin = view === 'login';
-    return (
-      <div className="authwrap">
-        <style>{CSS}</style>
-        <aside className="authside">
-          <Logo size={38} />
-          <div>
-            <h2>Gudang rapi, stok akurat, laporan siap.</h2>
-            <ul>
-              <li><Icon n="check" s={16} /> Invoice, pembayaran, dan kas dalam satu tempat</li>
-              <li><Icon n="check" s={16} /> Stock opname dengan riwayat lengkap</li>
-              <li><Icon n="check" s={16} /> Data aman di cloud, akses dari mana saja</li>
-            </ul>
-          </div>
-          <small>&copy; 2026 VALL Devolopment</small>
-        </aside>
-
-        <main className="authmain">
-          <div className="authtop">
-            <button className="linkbtn" onClick={() => setView('landing')}>← Beranda</button>
-            {ThemeBtn}
-          </div>
-          <form className="authform" onSubmit={isLogin ? handleLogin : handleRegister}>
-            <span className="mlogo"><Logo size={30} /></span>
-            <h1>{isLogin ? 'Selamat datang kembali' : 'Buat akun baru'}</h1>
-            <p className="muted">{isLogin ? 'Masuk untuk mengelola bisnis kamu.' : 'Cukup email dan password, langsung bisa dipakai.'}</p>
-            <label className="field">Email
-              <input type="email" autoComplete="email" placeholder="nama@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </label>
-            <label className="field">Password
-              <div className="pw">
-                <input type={showPw ? 'text' : 'password'} autoComplete={isLogin ? 'current-password' : 'new-password'} placeholder={isLogin ? 'Password kamu' : 'Minimal 6 karakter'} value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <button type="button" aria-label={showPw ? 'Sembunyikan password' : 'Tampilkan password'} onClick={() => setShowPw(!showPw)}><Icon n={showPw ? 'eyeOff' : 'eye'} /></button>
-              </div>
-            </label>
-            {isLogin && <button type="button" className="linkbtn" style={{ alignSelf: 'flex-end' }} onClick={() => setView('forgot')}>Lupa password?</button>}
-            <button className="btn big full" disabled={loading}>{loading ? 'Memproses…' : isLogin ? 'Masuk' : 'Daftar sekarang'}</button>
-            <p className="muted center">
-              {isLogin ? 'Belum punya akun? ' : 'Sudah punya akun? '}
-              <button type="button" className="linkbtn" onClick={() => setView(isLogin ? 'register' : 'login')}>{isLogin ? 'Daftar di sini' : 'Login di sini'}</button>
-            </p>
-          </form>
-        </main>
-        {Toast}
-      </div>
+        <PublicPages
+          view={view} go={setView} toast={toast}
+          email={email} setEmail={setEmail} password={password} setPassword={setPassword}
+          newPw={newPw} setNewPw={setNewPw} showPw={showPw} setShowPw={setShowPw} loading={loading}
+          onLogin={handleLogin} onRegister={handleRegister} onForgot={handleForgot} onReset={handleReset}
+        />
+      </>
     );
   }
 
@@ -1061,7 +922,6 @@ small{color:var(--mut)}.block{display:block}.muted,.mut{color:var(--mut)}.center
 input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);min-width:0}
 input:focus,select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.2)}
 input::placeholder{color:var(--mut);opacity:.7}
-.pw{position:relative}.pw input{padding-right:42px}.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--mut);cursor:pointer;padding:6px;display:grid}
 
 /* Badge, chip, avatar */
 .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.76rem;font-weight:700;white-space:nowrap}
@@ -1069,36 +929,7 @@ input::placeholder{color:var(--mut);opacity:.7}
 .chip{display:inline-block;padding:3px 10px;border-radius:8px;background:var(--pri-soft);color:var(--pri);font-size:.8rem;font-weight:600}
 :root[data-theme="dark"] .chip{color:#B9B8FF}
 .av{width:34px;height:34px;border-radius:10px;display:inline-grid;place-items:center;font-weight:800;flex:none}
-
-/* Landing */
-.landing{min-height:100vh}
-.lnav{display:flex;justify-content:space-between;align-items:center;padding:18px 40px;max-width:1200px;margin:0 auto}
-.lhero{max-width:1200px;margin:0 auto;padding:48px 40px 64px;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;
-background:radial-gradient(700px 360px at 90% 0%,rgba(124,58,237,.14),transparent),radial-gradient(600px 300px at 0% 10%,rgba(79,70,229,.10),transparent)}
-.lcopy h1{font-size:3rem;margin-bottom:18px;line-height:1.1}
-.lcopy p{font-size:1.1rem;color:var(--mut);max-width:520px;margin-bottom:28px}
-.lmock{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;gap:12px}
-.mockhead{display:flex;justify-content:space-between;align-items:center}
-.mockstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.mockstats div{background:var(--surface2);border-radius:12px;padding:12px;display:flex;flex-direction:column}
-.mockstats b{font-size:1.25rem}.mockstats span{font-size:.75rem;color:var(--mut)}.mockstats .w{background:var(--warn-soft)}.mockstats .w b{color:var(--warn-ink)}
-.mockrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid var(--line)}
-.mockrow .mn{font-weight:600;flex:1}.mockrow .ms{color:var(--mut);font-size:.85rem}
-.mocktoast{position:absolute;right:-12px;bottom:-18px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;display:flex;gap:8px;align-items:center;font-size:.85rem;font-weight:600;box-shadow:var(--shadow)}
-.lfeat{max-width:1200px;margin:0 auto;padding:0 40px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.fcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:8px}
-.fcard span{color:var(--mut);font-size:.93rem}.ficon{width:40px;height:40px;border-radius:12px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;margin-bottom:4px}
-.lfoot{text-align:center;padding:24px;color:var(--mut);border-top:1px solid var(--line);font-size:.9rem}
-
-/* Auth */
-.authwrap{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
-.authside{background:linear-gradient(155deg,#2F2D7A 0%,#1B1A3A 62%,#33205C 100%);color:#fff;padding:40px;display:flex;flex-direction:column;justify-content:space-between}
-.authside .logotext b{color:#C7D2FE}.authside h2{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;max-width:400px;margin-bottom:22px}
-.authside li{display:flex;gap:10px;align-items:center;margin-bottom:12px;color:#D8D7F5}.authside li svg{color:var(--acc);flex:none}.authside small{color:#9B9ABF}
-.authmain{display:flex;flex-direction:column;padding:24px 32px}
-.authtop{display:flex;justify-content:space-between;align-items:center}
-.authform{width:100%;max-width:400px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:32px 0}
-.mlogo{display:none}.authform .mlogo{display:inline-flex}
+.mlogo{display:none}
 
 /* Dashboard */
 .shell{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
@@ -1181,10 +1012,7 @@ tr.hl td{background:var(--warn-soft)!important}
 .overlay.top{z-index:70}
 .errtext{color:var(--bad-ink)}
 
-@media(max-width:960px){
-  .lhero{grid-template-columns:1fr;padding:32px 24px 56px}.lcopy h1{font-size:2.2rem}.lnav{padding:16px 24px}.lfeat{padding:0 24px 40px}.mocktoast{right:8px}
-  .authwrap{grid-template-columns:1fr}.authside{display:none}.mlogo{display:inline-flex}.authform .mlogo{margin-bottom:6px}
-}
+@media(max-width:960px){.mlogo{display:inline-flex}}
 @media(max-width:860px){h1{font-size:1.35rem}}
 @media(prefers-reduced-motion:reduce){.sk{animation:none}.track i{transition:none}}
 
@@ -1271,13 +1099,6 @@ tr.hl td{background:var(--warn-soft)!important}
   .opbar{flex-direction:column;align-items:stretch}
   .opbar .row .btn{flex:1 1 calc(50% - 4px)}
   .scanform .btn{flex:1 1 100%}
-
-  .lnav{padding:12px 14px}.lnav .row{gap:6px}.lnav .btn{padding:8px 12px;min-height:40px}
-  .lhero{padding:20px 16px 48px;gap:28px}.lcopy h1{font-size:1.9rem}.lcopy p{font-size:1rem}
-  .lcopy .row .btn{flex:1 1 100%}
-  .lmock{margin-bottom:24px}
-  .lfeat{padding:0 16px 32px}
-  .authmain{padding:16px}.authform{padding:16px 0}
 
   body .toast{left:12px;right:12px;bottom:16px;max-width:none}
 }
