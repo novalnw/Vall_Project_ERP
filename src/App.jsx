@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import Scanner from './Scanner';
 import './erp/erp.css';
+import './dash.css';
 import { ROLES, can, logAct } from './erp/ui';
 import { Supplier, HargaSupplier } from './erp/Master';
 import Pelanggan from './erp/Pelanggan';

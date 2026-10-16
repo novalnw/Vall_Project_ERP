@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+/* ================= Palet ================= */
+.shell{
+  --bg:#F5F0E6;--surface:#FFFDF8;--surface2:#EFE8D8;--line:#D8D0BF;--ink:#1C2B24;--mut:#5E6B63;
+  --pri:#C2410C;--pri-d:#9A3412;--pri-soft:#F4E2D0;--acc:#E8743B;--green:#2F6B4F;--on-pri:#FFFFFF;
+  --ok:#2F6B4F;--ok-soft:#DCE8DA;--ok-ink:#1F4A36;
+  --warn:#B7791F;--warn-soft:#F3E2BD;--warn-ink:#7A5200;
+  --bad:#B3261E;--bad-soft:#F3D5CE;--bad-ink:#8F1D14;
+  --side:#17221C;--shadow:none;
+  --serif:'Fraunces',Georgia,serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+:root[data-theme="dark"] .shell{
+  --bg:#121815;--surface:#1A231E;--surface2:#222E27;--line:#2E3C34;--ink:#EFE8D8;--mut:#9EABA2;
+  --pri:#FF7A59;--pri-d:#E8643F;--pri-soft:#3A2A22;--acc:#FF7A59;--green:#3E8E68;--on-pri:#1A1410;
+  --ok:#3E8E68;--ok-soft:#17332A;--ok-ink:#7FD0A6;
+  --warn:#D99A2B;--warn-soft:#3A2E12;--warn-ink:#F0C673;
+  --bad:#E5593F;--bad-soft:#3E1D17;--bad-ink:#FF9A86;
+  --side:#0E1512;
+}
+
+/* ================= Dasar ================= */
+html:root .shell{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+html:root .shell ::selection{background:var(--acc);color:#17221C}
+html:root .shell h1,html:root .shell h3{font-family:var(--serif);letter-spacing:-.01em}
+html:root .shell h1{font-size:2rem;font-weight:700}
+html:root .shell h3{font-size:1.1rem;font-weight:700}
+html:root .shell .top{border-bottom:1.5px solid var(--ink);padding-bottom:16px}
+html:root .shell .toptitle .muted{font-size:.9rem}
+
+/* ================= Logo ================= */
+html:root .shell .logo svg polygon:nth-child(1){fill:#E7D9BE}
+html:root .shell .logo svg polygon:nth-child(2){fill:#3E8E68}
+html:root .shell .logo svg polygon:nth-child(3){fill:#2F6B4F}
+html:root .shell .logo svg polygon:nth-child(4),
+html:root .shell .logo svg polygon:nth-child(5){fill:#E8743B}
+html:root .shell .logotext{font-family:var(--serif);font-weight:700;letter-spacing:-.01em}
+html:root .shell .logotext b{font-style:italic;font-weight:500;color:var(--green)}
+html:root .shell .side .logotext b{color:#9FD3B6}
+
+/* ================= Sidebar ================= */
+html:root .shell .side{
+  background-color:var(--side);
+  background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.04) 31px 32px);
+  color:#EFE8D8;border-right:1.5px solid var(--ink)
+}
+html:root .shell .navgroup{font-family:var(--mono);font-size:.66rem;font-weight:500;letter-spacing:.14em;color:#7E8F85;padding:16px 12px 6px}
+html:root .shell .nav{color:#B9C4BC;border-radius:4px;font-weight:500}
+html:root .shell .nav:hover{background:rgba(255,255,255,.07);color:#fff}
+html:root .shell .nav.on{background:rgba(232,116,59,.16);color:#fff;box-shadow:inset 3px 0 var(--acc)}
+html:root .shell .me{background:transparent;border:0;border-top:1.5px dashed rgba(255,255,255,.2);border-radius:0;padding:14px 4px 0}
+html:root .shell .avatar{border-radius:4px;background:var(--acc);color:#17221C;font-family:var(--serif)}
+html:root .shell .meinfo small{color:#9FB0A6;font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}
+html:root .shell .cnt{border-radius:3px;background:var(--acc);color:#17221C;font-family:var(--mono);font-weight:500}
+
+/* ================= Tombol ================= */
+html:root .shell .btn{
+  background:var(--pri);color:var(--on-pri);border:1.5px solid var(--ink);border-radius:6px;
+  box-shadow:3px 3px 0 var(--ink);font-weight:600;
+  transition:transform .08s,box-shadow .08s,background .15s
+}
+html:root .shell .btn:hover{background:var(--pri-d);transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+html:root .shell .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+html:root .shell .btn.sm{box-shadow:2px 2px 0 var(--ink)}
+html:root .shell .btn.ghost{background:transparent;color:var(--ink);box-shadow:none}
+html:root .shell .btn.ghost:hover{background:var(--surface2);transform:none;box-shadow:none}
+html:root .shell .btn.danger{background:var(--bad);color:#fff}
+html:root .shell .btn.danger:hover{background:#8F1D14}
+html:root .shell .btn.danger-t{color:var(--bad-ink)}
+html:root .shell .btn:disabled,html:root .shell .btn:disabled:hover{box-shadow:none;transform:none;opacity:.5}
+
+html:root .shell .iconbtn{border:1.5px solid var(--ink);border-radius:6px;background:var(--surface);color:var(--ink)}
+html:root .shell .iconbtn:hover{background:var(--surface2)}
+html:root .shell .iconbtn.sm{border-radius:4px}
+html:root .shell .iconbtn.bad:hover{color:var(--bad)}
+html:root .shell .iconbtn.dark{background:transparent;border-color:rgba(255,255,255,.22);color:#C6D0C9;border-radius:4px}
+html:root .shell .iconbtn.dark:hover{background:rgba(255,255,255,.08);color:#fff}
+
+html:root .shell .tabs .btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* ================= Input ================= */
+html:root .shell input,html:root .shell select,html:root .shell textarea{
+  border:1.5px solid var(--ink);border-radius:6px;background:var(--surface);color:var(--ink)
+}
+html:root .shell input:focus,html:root .shell select:focus,html:root .shell textarea:focus{
+  outline:3px solid color-mix(in srgb,var(--pri) 28%,transparent);outline-offset:0;border-color:var(--pri);box-shadow:none
+}
+html:root .shell .stepper{border:1.5px solid var(--ink);border-radius:6px;background:var(--surface)}
+html:root .shell .stepper button{background:var(--surface2);color:var(--ink)}
+html:root .shell .stepper button:hover{color:var(--pri)}
+html:root .shell .stepper input{border:0;border-radius:0;background:transparent}
+
+/* ================= Kartu, strip statistik ================= */
+html:root .shell .card{background:var(--surface);border:1.5px solid var(--ink);border-radius:6px;box-shadow:none}
+html:root .shell .stats{gap:0;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--surface)}
+html:root .shell .stat{
+  background:transparent;border:0;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);
+  margin:0 -1.5px -1.5px 0;border-radius:0;box-shadow:none;padding:18px 20px
+}
+html:root .shell .stat b{font-family:var(--serif);font-size:1.7rem;font-weight:700;letter-spacing:-.01em}
+html:root .shell .stat span{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--mut)}
+html:root .shell .stat.warn b{color:var(--warn-ink)}
+html:root .shell .stat.bad b{color:var(--bad-ink)}
+html:root .shell .cards .stat{background:var(--surface);border:1.5px solid var(--ink);margin:0;border-radius:6px}
+html:root .shell .sicon{width:34px;height:34px;background:transparent;border:1.5px solid var(--ink);border-radius:4px;color:var(--ink)}
+
+/* ================= Grafik ================= */
+html:root .shell .donut{border:1.5px solid var(--ink)}
+html:root .shell .legend i{border-radius:0}
+html:root .shell .track{height:12px;border-radius:0;border:1.5px solid var(--ink);background:var(--surface2)}
+html:root .shell .track i{border-radius:0;background:var(--green)}
+
+/* ================= Tabel ================= */
+@media(min-width:861px){
+  html:root .shell .tablewrap{border:1.5px solid var(--ink);border-radius:6px;box-shadow:none;background:var(--surface)}
+}
+html:root .shell th{
+  font-family:var(--mono);font-size:.68rem;font-weight:500;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--mut);background:var(--surface2);border-bottom:1.5px solid var(--ink)
+}
+html:root .shell td.n{font-family:var(--mono);font-size:.9rem;font-variant-numeric:tabular-nums}
+
+/* ================= Badge, chip, avatar ================= */
+html:root .shell .badge{
+  border:1.5px solid currentColor;border-radius:3px;padding:3px 8px;
+  font-family:var(--mono);font-size:.68rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em
+}
+html:root .shell .chip{
+  background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:3px;
+  font-family:var(--mono);font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em
+}
+html:root .shell .av{
+  background:var(--surface2)!important;color:var(--ink)!important;
+  border:1.5px solid var(--ink);border-radius:4px;font-family:var(--serif)
+}
+
+/* ================= Modal, notifikasi ================= */
+html:root .shell .overlay{background:rgba(23,34,28,.58)}
+html:root .shell .modal h3{font-family:var(--serif)}
+html:root .shell .cicon{border-radius:4px;border:1.5px solid var(--ink)}
+html:root .shell .eicon{border-radius:4px;background:var(--surface2);border:1.5px solid var(--ink);color:var(--ink)}
+html:root .shell .sk{border-radius:4px}
+html:root .shell .reader{border-radius:6px;border:1.5px solid var(--ink)}
+html:root .shell .toast{
+  background:var(--ink);color:var(--bg);border:1.5px solid var(--ink);border-radius:6px;
+  box-shadow:3px 3px 0 var(--acc);font-family:var(--mono);font-size:.85rem;font-weight:500
+}
+html:root .shell .toast.err{background:var(--bad);border-color:var(--bad);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+
+/* ================= Komponen modul ERP ================= */
+html:root .shell .notice{border:1.5px solid var(--warn);border-radius:6px}
+html:root .shell .paybox{border:1.5px dashed var(--ink);border-radius:6px}
+html:root .shell .lastscan{border:1.5px solid var(--ok);border-radius:6px}
+html:root .shell .sumrow.big{border-top:1.5px solid var(--ink)}
+html:root .shell .pcard{border:1.5px solid var(--ink);border-radius:6px;box-shadow:none}
+html:root .shell .pcard.in{box-shadow:3px 3px 0 var(--acc)}
+html:root .shell .pcard .pname{font-family:var(--serif)}
+html:root .shell .pcard .pprice{font-family:var(--mono)}
+html:root .shell .cartbar{border:1.5px solid var(--ink);border-radius:6px}
+html:root .shell .mbar{background:var(--surface);border-bottom:1.5px solid var(--ink)}
+
+/* ================= Desktop vs HP ================= */
+@media(min-width:861px){
+  html:root .shell .modal{border:1.5px solid var(--ink);border-radius:6px;box-shadow:6px 6px 0 var(--ink)}
+}
+@media(max-width:860px){
+  html:root .shell h1{font-size:1.5rem}
+  html:root .shell .stat{padding:14px}
+  html:root .shell .stat b{font-size:1.2rem}
+  html:root .shell .modal,html:root .shell .modal.wide,html:root .shell .modal.sm,html:root .shell .modal.scan{
+    border:1.5px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;box-shadow:none
+  }
+  html:root .shell .tablewrap tbody tr{border:1.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
+  html:root .shell .tablewrap td::before{font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}
+}
