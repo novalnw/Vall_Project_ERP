@@ -13,6 +13,7 @@ import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
 import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
+import Konsultan from './erp/Konsultan';
 import PublicPages from './Public';
 
 // ================= Helper =================
@@ -878,6 +879,7 @@ export default function App() {
         />
       )}
       {Toast}
+      <Konsultan />
     </div>
   );
 }
@@ -1103,4 +1105,26 @@ tr.hl td{background:var(--warn-soft)!important}
 
   body .toast{left:12px;right:12px;bottom:16px;max-width:none}
 }
+
+/* ===== Konsultan AI ===== */
+.kfab{position:fixed;right:18px;bottom:18px;z-index:1200;width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px rgba(27,26,58,.25);transition:transform .12s ease,background .15s}
+.kfab:hover{background:var(--pri-d);transform:translateY(-2px)}
+.kfab:active{transform:translateY(0)}
+.kpanel{position:fixed;right:18px;bottom:84px;z-index:1200;width:min(380px,calc(100vw - 24px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 48px rgba(27,26,58,.18);overflow:hidden;animation:kshow .18s ease}
+@keyframes kshow{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.khead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:var(--side);color:#fff}
+.khead-t{display:flex;align-items:center;gap:10px}
+.khead-t b{display:block;font-size:.95rem}
+.khead-t small{color:#B4B3D6;font-size:.75rem}
+.kdot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(18,184,134,.3);flex:none}
+.khead .iconbtn{border-color:rgba(255,255,255,.14);color:#C9C8E6}
+.kbody{display:flex;flex-direction:column;gap:8px;padding:14px;height:min(340px,52vh);overflow-y:auto;background:var(--surface2)}
+.kmsg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:.86rem;line-height:1.45;white-space:pre-wrap}
+.kmsg.ai{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px;align-self:flex-start}
+.kmsg.user{background:var(--pri);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.kchips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0;background:var(--surface2)}
+.kchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;font-size:.8rem;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
+.kchip:hover{border-color:var(--pri);background:var(--pri-soft)}
+.kinput{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--surface)}
+.kinput input{flex:1;padding:10px 12px}
 `;
