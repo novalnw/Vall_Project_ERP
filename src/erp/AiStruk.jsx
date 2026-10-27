@@ -93,9 +93,33 @@ async function getOcrWorker() {
   return ocrWorker;
 }
 
+async function pdfToImageBlob(blob) {
+  const pdfjs = await import('pdfjs-dist');
+  const worker = pdfjs.GlobalWorkerOptions.workerSrc
+    ? null
+    : await import('pdfjs-dist/build/pdf.worker.min.mjs');
+  if (worker) pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  const buf = await blob.arrayBuffer();
+  const doc = await pdfjs.getDocument({ data: buf }).promise;
+  const page = await doc.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+  await doc.destroy();
+  return out;
+}
+
 async function localOcrText(blob) {
   const worker = await getOcrWorker();
-  const { data } = await worker.recognize(blob);
+  let input = blob;
+  if (blob.type === 'application/pdf' || (blob.name || '').toLowerCase().endsWith('.pdf')) {
+    input = await pdfToImageBlob(blob);
+  }
+  const { data } = await worker.recognize(input);
   return data.text || '';
 }
 

@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.117.2",
     "9router": "^0.5.99",
     "html5-qrcode": "^2.3.8",
+    "pdfjs-dist": "^6.4.299",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tesseract.js": "^7.0.0"
