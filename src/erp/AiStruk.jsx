@@ -93,9 +93,9 @@ async function getOcrWorker() {
   return ocrWorker;
 }
 
-async function localOcrText(fileOrUrl) {
+async function localOcrText(blob) {
   const worker = await getOcrWorker();
-  const { data } = await worker.recognize(fileOrUrl);
+  const { data } = await worker.recognize(blob);
   return data.text || '';
 }
 
@@ -356,8 +356,9 @@ export default function AiStruk({ notify, user }) {
       if (isQuota(msg)) {
         try {
           notify('Quota AI habis — pakai OCR lokal (Tesseract)...');
-          const { data: up } = await supabase.storage.from(BUCKET).createSignedUrl(d.file_path, 3600);
-          const text = await localOcrText(up.signedUrl);
+          const { data: blob, error: dlErr } = await supabase.storage.from(BUCKET).download(d.file_path);
+          if (dlErr) throw dlErr;
+          const text = await localOcrText(blob);
           await supabase.from('documents').update({
             status: 'needs_review',
             confidence: 0.3,
