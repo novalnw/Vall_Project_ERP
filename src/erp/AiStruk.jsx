@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createWorker } from 'tesseract.js';
 import { supabase } from '../supabaseClient';
 
 const MAX_MB = 10;
@@ -81,6 +82,22 @@ const isAccepted = (f) => ACCEPT_RE.test(f.type);
 
 const MAX_DIM = 1600;
 const JPEG_QUALITY = 0.7;
+
+const isQuota = (m) => /(429|quota|rate.limit|plan and billing)/i.test(m || '');
+
+let ocrWorker = null;
+async function getOcrWorker() {
+  if (!ocrWorker) {
+    ocrWorker = createWorker('eng', 1, { logger: () => {} });
+  }
+  return ocrWorker;
+}
+
+async function localOcrText(fileOrUrl) {
+  const worker = await getOcrWorker();
+  const { data } = await worker.recognize(fileOrUrl);
+  return data.text || '';
+}
 
 async function compressImage(file) {
   if (!file.type.startsWith('image/')) return file;
@@ -335,8 +352,27 @@ export default function AiStruk({ notify, user }) {
       setOpen(d.id);
       notify('Dokumen sedang diproses AI.');
     } catch (e) {
-      setErrs((x) => ({ ...x, [d.id]: errMsg(e) }));
-      notify(errMsg(e), 'err');
+      const msg = errMsg(e);
+      if (isQuota(msg)) {
+        try {
+          notify('Quota AI habis — pakai OCR lokal (Tesseract)...');
+          const { data: up } = await supabase.storage.from(BUCKET).createSignedUrl(d.file_path, 3600);
+          const text = await localOcrText(up.signedUrl);
+          await supabase.from('documents').update({
+            status: 'needs_review',
+            confidence: 0.3,
+            flags: [{ level: 'warn', msg: 'Diproses pakai OCR lokal (Tesseract) karena quota AI habis. Periksa hasil.' }],
+            data: { ...(d.data || {}), text_raw: text },
+            error: null,
+          }).eq('id', d.id);
+          setOpen(d.id);
+        } catch (e2) {
+          setErrs((x) => ({ ...x, [d.id]: 'Quota AI habis dan OCR lokal gagal: ' + errMsg(e2) }));
+        }
+      } else {
+        setErrs((x) => ({ ...x, [d.id]: msg }));
+        notify(msg, 'err');
+      }
     } finally {
       setBusy((b) => { const n = new Set(b); n.delete(d.id); return n; });
       await load();
