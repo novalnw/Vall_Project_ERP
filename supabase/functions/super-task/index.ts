@@ -92,45 +92,34 @@ async function isStaff(userId: string): Promise<boolean> {
 
 async function callGemini(base64: string, mime: string): Promise<Result> {
   if (!geminiKey) throw new Error('GEMINI_API_KEY belum diatur')
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-  let lastErr = ''
 
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          generationConfig: { responseMimeType: 'application/json' },
-          contents: [{
-            parts: [
-              { text: PROMPT },
-              { inlineData: { mimeType: mime, data: base64 } },
-            ],
-          }],
-        }),
-      },
-    )
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generationConfig: { responseMimeType: 'application/json' },
+        contents: [{
+          parts: [
+            { text: PROMPT },
+            { inlineData: { mimeType: mime, data: base64 } },
+          ],
+        }],
+      }),
+    },
+  )
 
-    if (resp.ok) {
-      const json = await resp.json()
-      const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
-      let parsed: unknown
-      try { parsed = JSON.parse(text) } catch { parsed = {} }
-      return normalize(parsed)
-    }
-
-    const t = await resp.text()
-    lastErr = `Gemini ${resp.status}: ${t.slice(0, 300)}`
-    if (resp.status === 429 || resp.status === 503) {
-      await sleep(2000 * (attempt + 1))
-      continue
-    }
-    break
+  if (resp.ok) {
+    const json = await resp.json()
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
+    let parsed: unknown
+    try { parsed = JSON.parse(text) } catch { parsed = {} }
+    return normalize(parsed)
   }
 
-  throw new Error(lastErr)
+  const t = await resp.text()
+  throw new Error(`Gemini ${resp.status}: ${t.slice(0, 300)}`)
 }
 
 async function downloadObject(path: string): Promise<{ base64: string; mime: string }> {

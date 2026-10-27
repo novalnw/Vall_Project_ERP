@@ -981,6 +981,7 @@ th{padding:13px 16px;color:var(--mut);font-weight:600;font-size:.82rem;backgroun
 td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}tbody tr:last-child td{border-bottom:0}
 tbody tr:hover td{background:var(--surface2)}tr.diff td{background:var(--pri-soft)}
 .n{text-align:right}.act{white-space:nowrap;text-align:right}.act .iconbtn,.act .btn{margin-left:6px}
+.actrow{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .prod{display:flex;align-items:center;gap:12px}
 .pos{color:var(--ok-ink)}.neg{color:var(--bad-ink)}
 .cell-r{display:flex;justify-content:flex-end}

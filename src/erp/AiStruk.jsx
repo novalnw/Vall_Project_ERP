@@ -151,6 +151,9 @@ function ResultPanel({ doc, tpl, busy, onReprocess }) {
             <span>Template: {tpl?.name || 'tidak dikenali'}</span>
             {doc.confidence !== null && <span>Keyakinan AI: {Math.round(doc.confidence * 100)}%</span>}
           </div>
+          {doc.data?.text_raw && (
+            <pre className="ocrtext" style={{ whiteSpace: 'pre-wrap', background: 'var(--surface2)', padding: '10px 12px', borderRadius: '10px', fontSize: '.85rem', marginBottom: '12px', maxHeight: 200, overflow: 'auto' }}>{doc.data.text_raw}</pre>
+          )}
           {tpl && (
             <div className="docfields">
               {tpl.fields.map((f) => (
@@ -344,9 +347,36 @@ export default function AiStruk({ notify, user }) {
     }
   };
 
-  const runProcess = async (d) => {
+  const runLocalOcr = async (d) => {
+    const { data: blob, error: dlErr } = await supabase.storage.from(BUCKET).download(d.file_path);
+    if (dlErr) throw dlErr;
+    const text = await localOcrText(blob);
+    const { error } = await supabase.from('documents').update({
+      status: 'needs_review',
+      confidence: 0.3,
+      flags: [{ level: 'warn', msg: 'Diproses pakai OCR lokal (Tesseract). Periksa hasil.' }],
+      data: { ...(d.data || {}), text_raw: text },
+      error: null,
+    }).eq('id', d.id);
+    if (error) throw error;
+  };
+
+  const runProcess = async (d, forceLocal = false) => {
     setBusy((b) => new Set(b).add(d.id));
     setErrs((e) => { const { [d.id]: _x, ...rest } = e; return rest; });
+    if (forceLocal) {
+      try {
+        notify('Memproses OCR lokal (Tesseract)...');
+        await runLocalOcr(d);
+        setOpen(d.id);
+      } catch (e2) {
+        setErrs((x) => ({ ...x, [d.id]: 'OCR lokal gagal: ' + errMsg(e2) }));
+      } finally {
+        setBusy((b) => { const n = new Set(b); n.delete(d.id); return n; });
+        await load();
+      }
+      return;
+    }
     try {
       await processDoc(d.id);
       setOpen(d.id);
@@ -356,16 +386,7 @@ export default function AiStruk({ notify, user }) {
       if (isQuota(msg)) {
         try {
           notify('Quota AI habis — pakai OCR lokal (Tesseract)...');
-          const { data: blob, error: dlErr } = await supabase.storage.from(BUCKET).download(d.file_path);
-          if (dlErr) throw dlErr;
-          const text = await localOcrText(blob);
-          await supabase.from('documents').update({
-            status: 'needs_review',
-            confidence: 0.3,
-            flags: [{ level: 'warn', msg: 'Diproses pakai OCR lokal (Tesseract) karena quota AI habis. Periksa hasil.' }],
-            data: { ...(d.data || {}), text_raw: text },
-            error: null,
-          }).eq('id', d.id);
+          await runLocalOcr(d);
           setOpen(d.id);
         } catch (e2) {
           setErrs((x) => ({ ...x, [d.id]: 'Quota AI habis dan OCR lokal gagal: ' + errMsg(e2) }));
@@ -539,7 +560,10 @@ export default function AiStruk({ notify, user }) {
                         {isBusy ? (
                           <span className="muted">memproses...</span>
                         ) : canProcess ? (
-                          <button className="btn sm" onClick={() => runProcess(d)}>{d.status === 'failed' ? 'Coba lagi' : 'Proses'}</button>
+                          <span className="actrow">
+                            <button className="btn sm" onClick={() => runProcess(d)}>{d.status === 'failed' ? 'Coba lagi' : 'Proses'}</button>
+                            <button className="btn ghost sm" title="OCR lokal tanpa Gemini" onClick={() => runProcess(d, true)}>Proses lokal</button>
+                          </span>
                         ) : (
                           <>
                             <button className="btn ghost sm" onClick={() => setOpen(open === d.id ? null : d.id)}>{open === d.id ? 'Tutup' : 'Lihat hasil'}</button>
