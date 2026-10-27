@@ -79,6 +79,35 @@ const validateDoc = (fields, data, lines) => {
 const errMsg = (e) => (e instanceof Error ? e.message : e && typeof e === 'object' && 'message' in e ? String(e.message) : 'Terjadi kesalahan');
 const isAccepted = (f) => ACCEPT_RE.test(f.type);
 
+const MAX_DIM = 1600;
+const JPEG_QUALITY = 0.7;
+
+async function compressImage(file) {
+  if (!file.type.startsWith('image/')) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIM / Math.max(bmp.width, bmp.height));
+    if (scale >= 1 && file.size <= 500 * 1024) return file;
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0, w, h);
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
+    );
+    bmp.close();
+    if (!blob) return file;
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    const meta = { type: 'image/jpeg', ext, name: file.name.replace(/\.[^.]+$/, '') + '.jpg' };
+    return new File([blob], meta.name, { type: meta.type });
+  } catch {
+    return file;
+  }
+}
+
 function Thumb({ path }) {
   const [url, setUrl] = useState('');
   const isPdf = (path || '').endsWith('.pdf');
@@ -318,7 +347,8 @@ export default function AiStruk({ notify, user }) {
     if (!user) return;
     const jobs = [];
     const rejected = [];
-    for (const file of Array.from(list)) {
+    for (const raw of Array.from(list)) {
+      const file = await compressImage(raw);
       const item = { id: crypto.randomUUID(), name: file.name, state: 'uploading' };
       if (!isAccepted(file)) rejected.push({ ...item, state: 'error', msg: 'Format harus JPG, PNG, WEBP, atau PDF' });
       else jobs.push({ item, file });
