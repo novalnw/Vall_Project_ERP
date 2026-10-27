@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createWorker } from 'tesseract.js';
+import { getDocument as pdfGetDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf.mjs';
 import { supabase } from '../supabaseClient';
 
 const MAX_MB = 10;
@@ -94,13 +95,9 @@ async function getOcrWorker() {
 }
 
 async function pdfToImageBlob(blob) {
-  const pdfjs = await import('pdfjs-dist');
-  const worker = pdfjs.GlobalWorkerOptions.workerSrc
-    ? null
-    : await import('pdfjs-dist/build/pdf.worker.min.mjs');
-  if (worker) pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
   const buf = await blob.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: buf }).promise;
+  const doc = await pdfGetDocument({ data: buf }).promise;
   const page = await doc.getPage(1);
   const viewport = page.getViewport({ scale: 2 });
   const canvas = document.createElement('canvas');
