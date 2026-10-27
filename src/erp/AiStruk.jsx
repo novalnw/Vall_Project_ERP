@@ -97,7 +97,8 @@ async function getOcrWorker() {
 async function pdfToImageBlob(blob) {
   GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString();
   const buf = await blob.arrayBuffer();
-  const doc = await pdfGetDocument({ data: buf }).promise;
+  const task = pdfGetDocument({ data: buf });
+  const doc = await task.promise;
   const page = await doc.getPage(1);
   const viewport = page.getViewport({ scale: 2 });
   const canvas = document.createElement('canvas');
@@ -106,7 +107,8 @@ async function pdfToImageBlob(blob) {
   const ctx = canvas.getContext('2d');
   await page.render({ canvasContext: ctx, viewport }).promise;
   const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-  await doc.destroy();
+  try { if (doc && typeof doc.destroy === 'function') await doc.destroy(); } catch {}
+  try { if (task && typeof task.destroy === 'function') await task.destroy(); } catch {}
   return out;
 }
 
