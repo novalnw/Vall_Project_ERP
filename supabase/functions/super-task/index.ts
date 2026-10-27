@@ -3,9 +3,16 @@
 // Membaca struk/nota dari Storage lalu meminta Gemini membaca
 // dan mengekstrak data terstruktur ke tabel 'documents'.
 //
-// Deploy:
+// Deploy (WAJIB dengan verify_jwt, JANGAN --no-verify-jwt):
 //   supabase secrets set GEMINI_API_KEY=xxx
-//   supabase functions deploy super-task --no-verify-jwt
+//   supabase functions deploy super-task       // default verify_jwt = true
+//
+// Keamanan:
+//   - Hanya dipanggil oleh user yang sudah login (JWT diverifikasi
+//     oleh Supabase gateway) yang perannya STAF (owner/admin/kasir/
+//     gudang). Pelanggan publik ditolak (403).
+//   - Validasi server-side: hanya file gambar (jpeg/png/webp) & PDF,
+//     maks 10 MB.
 // ============================================================
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -17,6 +24,9 @@ const geminiKey = Deno.env.get('GEMINI_API_KEY')
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 const MODEL = 'gemini-3.8-flash'
+const MAX_BYTES = 10 * 1024 * 1024 // 10 MB
+const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+const STAFF_ROLES = new Set(['owner', 'admin', 'kasir', 'gudang'])
 
 const PROMPT = `Kamu adalah mesin OCR untuk struk/nota belanja.
 Baca gambar/PDF yang dilampirkan, lalu kembalikan HANYA satu objek JSON tanpa teks lain:
@@ -51,6 +61,33 @@ function normalize(data: unknown): Result {
     lines: Array.isArray(d.lines) ? d.lines : [],
     flags: Array.isArray(d.flags) ? (d.flags as Flag[]) : [],
   }
+}
+
+// Ekstrak user id dari JWT. Tanda tangan sudah diverifikasi oleh
+// Supabase gateway saat verify_jwt = true; di sini cukup baca klaim 'sub'.
+function tokenUserId(req: Request): string | null {
+  const auth = req.headers.get('authorization') ?? ''
+  if (!auth.toLowerCase().startsWith('bearer ')) return null
+  const token = auth.slice(7).trim()
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(escape(atob(b64)))
+    return (JSON.parse(json) as { sub?: string })?.sub ?? null
+  } catch {
+    return null
+  }
+}
+
+async function isStaff(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error || !data) return false
+  return STAFF_ROLES.has(String(data.role).toLowerCase())
 }
 
 async function callGemini(base64: string, mime: string): Promise<Result> {
@@ -99,7 +136,11 @@ async function callGemini(base64: string, mime: string): Promise<Result> {
 async function downloadObject(path: string): Promise<{ base64: string; mime: string }> {
   const { data, error } = await supabase.storage.from('receipts').download(path)
   if (error) throw new Error(`Gagal unduh file: ${error.message}`)
+
   const mime = data.type || 'application/pdf'
+  if (!ALLOWED_MIME.has(mime)) throw new Error(`Tipe file tidak diizinkan: ${mime}`)
+  if (data.size > MAX_BYTES) throw new Error(`File melebihi batas 10 MB: ${data.size} byte`)
+
   const buf = new Uint8Array(await data.arrayBuffer())
   let b64 = ''
   let bytes = 0
@@ -112,15 +153,27 @@ async function downloadObject(path: string): Promise<{ base64: string; mime: str
 }
 
 Deno.serve(async (req) => {
-  // CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: cors() })
   }
 
   try {
-    const { document_id } = await req.json()
-    if (!document_id) throw new Error('document_id wajib diisi')
+    // 1) Otentikasi: harus login & staf
+    const userId = tokenUserId(req)
+    if (!userId) throw new AuthError('Login diperlukan')
+    if (!(await isStaff(userId))) throw new AuthError('Akses hanya untuk staf')
 
+    // 2) Validasi body
+    let body: { document_id?: string }
+    try {
+      body = await req.json()
+    } catch {
+      throw new Error('Body JSON tidak valid')
+    }
+    const { document_id } = body
+    if (!document_id || typeof document_id !== 'string') throw new Error('document_id wajib diisi')
+
+    // 3) Ambil dokumen, proses
     const { data: doc, error } = await supabase
       .from('documents')
       .select('id,file_path')
@@ -155,10 +208,13 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, status }, 200)
   } catch (e) {
+    if (e instanceof AuthError) return json({ ok: false, error: e.message }, 403)
     const msg = e instanceof Error ? e.message : 'Unknown error'
     return json({ ok: false, error: msg }, 400)
   }
 })
+
+class AuthError extends Error {}
 
 function cors() {
   return {
