@@ -1,0 +1,4 @@
+project_id = "guqikfnzoqqysitgqbhs"
+
+[functions.super-task]
+verify_jwt = false

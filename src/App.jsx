@@ -14,6 +14,7 @@ import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSu
 import { Roles, Log, Pengaturan } from './erp/Sistem';
 import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
 import Konsultan from './erp/Konsultan';
+import AiStruk from './erp/AiStruk';
 import PublicPages from './Public';
 
 // ================= Helper =================
@@ -69,6 +70,7 @@ const MENU = [
   ]],
   ['UTAMA', [
     ['ringkasan', 'grid', 'Dashboard'],
+    ['ai_struk', 'receipt', 'AI Struk'],
     ['invoice_baru', 'filePlus', 'Buat invoice'],
     ['invoice', 'receipt', 'Daftar invoice'],
     ['pembayaran', 'card', 'Pembayaran'],
@@ -504,6 +506,7 @@ export default function App() {
   // ================= DASHBOARD =================
   const titles = {
     ringkasan: ['Dashboard', `Halo, ${nama}. Ini kondisi bisnis kamu hari ini.`],
+    ai_struk: ['AI Struk', 'Foto atau scan struk, AI yang baca dan rapikan'],
     invoice_baru: ['Buat invoice', 'Catat penjualan, stok berkurang otomatis'],
     invoice: ['Daftar invoice', 'Pantau tagihan dan status pembayaran'],
     pembayaran: ['Pembayaran', 'Riwayat pembayaran yang diterima'],
@@ -595,6 +598,7 @@ export default function App() {
         {cur === 'denied' && <EmptyState icon="shield" title="Tidak ada akses" text={`Peran ${ROLES[role]} tidak bisa membuka menu ini.`} />}
 
         {/* ===== ERP: modul ===== */}
+        {cur === 'ai_struk' && <AiStruk {...P} user={session?.user?.id} />}
         {cur === 'invoice_baru' && <BuatInvoice {...P} onDone={() => go('invoice')} />}
         {cur === 'invoice' && <DaftarInvoice {...P} />}
         {cur === 'pembayaran' && <Pembayaran {...P} />}
