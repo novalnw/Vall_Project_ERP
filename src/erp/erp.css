@@ -93,3 +93,19 @@ textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79
 .badge.st-verified,.badge.st-exported{background:var(--ok-soft);color:var(--ok-ink)}
 .badge.st-failed{background:var(--bad-soft);color:var(--bad-ink)}
 @media(max-width:860px){.reviewfields{grid-template-columns:1fr}}
+
+/* ===== Analitik ===== */
+.chart{display:flex;align-items:flex-end;gap:3px;height:180px;padding-top:8px}
+.cbar{flex:1 1 0;display:flex;align-items:flex-end;height:100%;min-width:2px;background:var(--line);border-radius:4px 4px 2px 2px;overflow:hidden;cursor:default}
+.cbar-fill{width:100%;background:linear-gradient(180deg,var(--pri),var(--pri-d));border-radius:4px 4px 2px 2px;min-height:2px;transition:height .3s}
+.cbar:hover .cbar-fill{filter:brightness(1.1)}
+.points{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.point{position:relative;background:var(--surface2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px;overflow:hidden;min-height:74px}
+.point-bar{position:absolute;left:0;right:0;bottom:0;background:var(--pri-soft);opacity:.6;z-index:0}
+.point b,.point small{position:relative;z-index:1}
+.point b{font-size:1.05rem}
+.point b.pos{color:var(--ok-ink)}.point b.neg{color:var(--bad-ink)}.point b.warn{color:var(--warn-ink)}
+.point small{color:var(--mut);font-size:.8rem}
+.badge.st-habis,.badge.st-segera{background:var(--bad-soft);color:var(--bad-ink)}
+.badge.st-perlu{background:var(--warn-soft);color:var(--warn-ink)}
+.badge.st-aman{background:var(--ok-soft);color:var(--ok-ink)}

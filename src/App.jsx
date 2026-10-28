@@ -11,11 +11,13 @@ import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
 import { Pembayaran, Pengeluaran, KasBank } from './erp/Keuangan';
 import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
+import Analitik from './erp/Analitik';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
 import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
 import Konsultan from './erp/Konsultan';
 import AiStruk from './erp/AiStruk';
 import PublicPages from './Public';
+import LogoVall from './assets/LogoVall.jpeg';
 
 // ================= Helper =================
 const parseHarga = (p) => Number(String(p ?? '').replace(/[^\d]/g, '')) || 0;
@@ -70,6 +72,7 @@ const MENU = [
   ]],
   ['UTAMA', [
     ['ringkasan', 'grid', 'Dashboard'],
+    ['analitik', 'trend', 'Analitik & prediksi'],
     ['ai_struk', 'receipt', 'AI Struk'],
     ['invoice_baru', 'filePlus', 'Buat invoice'],
     ['invoice', 'receipt', 'Daftar invoice'],
@@ -149,16 +152,10 @@ function Icon({ n, s = 18 }) {
   );
 }
 
-function Logo({ size = 34, text = true }) {
+function Logo({ size = 40, text = true }) {
   return (
     <span className="logo">
-      <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-        <polygon points="20,4 35,12 20,20 5,12" fill="#C7D2FE" />
-        <polygon points="5,12 20,20 20,37 5,29" fill="#4F46E5" />
-        <polygon points="35,12 20,20 20,37 35,29" fill="#3730A3" />
-        <polygon points="26,7.2 29,8.8 14,16.8 11,15.2" fill="#FF7A59" />
-        <polygon points="11,15.2 14,16.8 14,33.8 11,32.2" fill="#FF7A59" />
-      </svg>
+      <img src={LogoVall} alt="Logo VALL Dev" width={size} height={size} style={{ borderRadius: '50%', objectFit: 'cover' }} />
       {text && <span className="logotext">VALL<b>Dev</b></span>}
     </span>
   );
@@ -475,6 +472,14 @@ export default function App() {
   const diffCount = items.filter((i) => selisihOf(i) !== 0).length;
   const counted = items.filter((i) => counts[i.id] !== undefined && counts[i.id] !== '').length;
 
+  const nilaiBeli = (i) => (i.stock || 0) * parseHarga(i.harga_beli);
+  const perKategoriNilai = useMemo(() => {
+    const m = {};
+    items.forEach((i) => { const k = i.category || 'Tanpa kategori'; m[k] = (m[k] || 0) + nilaiBeli(i); });
+    return Object.entries(m).sort((a, b) => b[1] - a[1]);
+  }, [items]);
+  const maxKatNilai = Math.max(1, ...perKategoriNilai.map(([, v]) => v));
+
   // ---------- Potongan UI bersama ----------
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const ThemeBtn = (
@@ -506,6 +511,7 @@ export default function App() {
   // ================= DASHBOARD =================
   const titles = {
     ringkasan: ['Dashboard', `Halo, ${nama}. Ini kondisi bisnis kamu hari ini.`],
+    analitik: ['Analitik & prediksi', 'Tren penjualan, margin, dan rekomendasi restock'],
     ai_struk: ['AI Struk', 'Foto atau scan struk, AI yang baca dan rapikan'],
     invoice_baru: ['Buat invoice', 'Catat penjualan, stok berkurang otomatis'],
     invoice: ['Daftar invoice', 'Pantau tagihan dan status pembayaran'],
@@ -551,7 +557,7 @@ export default function App() {
       {/* Bar atas khusus HP + tombol hamburger */}
       <header className="mbar">
         <button className="iconbtn" onClick={() => setMenuOpen(true)} aria-label="Buka menu" aria-expanded={menuOpen}><Icon n="menu" /></button>
-        <Logo size={28} />
+        <Logo size={36} />
         {ThemeBtn}
       </header>
       <div className="scrim" onClick={() => setMenuOpen(false)} />
@@ -586,7 +592,7 @@ export default function App() {
       <main className="content">
         <div className="top">
           <div className="toptitle">
-            <span className="mlogo"><Logo size={28} text={false} /></span>
+            <span className="mlogo"><Logo size={36} text={false} /></span>
             <div><h1>{(titles[tab] || ['VALLDev'])[0]}</h1><p className="muted">{(titles[tab] || [])[1]}</p></div>
           </div>
           <div className="row">
@@ -598,6 +604,7 @@ export default function App() {
         {cur === 'denied' && <EmptyState icon="shield" title="Tidak ada akses" text={`Peran ${ROLES[role]} tidak bisa membuka menu ini.`} />}
 
         {/* ===== ERP: modul ===== */}
+        {cur === 'analitik' && <Analitik items={items} />}
         {cur === 'ai_struk' && <AiStruk {...P} user={session?.user?.id} />}
         {cur === 'invoice_baru' && <BuatInvoice {...P} onDone={() => go('invoice')} />}
         {cur === 'invoice' && <DaftarInvoice {...P} />}
@@ -709,21 +716,34 @@ export default function App() {
                 <option value="menipis">Menipis</option>
                 <option value="habis">Habis</option>
               </select>
-              <button className="btn ghost" onClick={() => exportCSV('produk', filtered.map((i) => ({ Nama: i.name, Kategori: i.category, Barcode: i.barcode, Stok: i.stock, 'Stok minimum': i.minStock, Harga: i.price, 'Harga beli': i.harga_beli })))}><Icon n="download" /> CSV</button>
+              <button className="btn ghost" onClick={() => exportCSV('produk', filtered.map((i) => ({ Nama: i.name, Kategori: i.category, Barcode: i.barcode, Stok: i.stock, 'Stok minimum': i.minStock, Harga: i.price, 'Harga beli': i.harga_beli, Nilai: nilaiBeli(i) })))}><Icon n="download" /> CSV</button>
               <button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah produk</button>
             </div>
 
+            <section className="card">
+              <h3>Nilai persediaan per kategori</h3>
+              {perKategoriNilai.map(([k, v]) => (
+                <div key={k} className="bar">
+                  <div className="barhead"><span>{k}</span><b>{rupiah(v)}</b></div>
+                  <div className="track"><i style={{ width: (v / maxKatNilai) * 100 + '%' }} /></div>
+                </div>
+              ))}
+              {ready && !perKategoriNilai.length && <p className="muted">Belum ada data barang.</p>}
+            </section>
+
             <div className="tablewrap">
               <table>
-                <thead><tr><th>Produk</th><th>Kategori</th><th className="n">Stok</th><th className="n">Harga jual</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Produk</th><th>Kategori</th><th className="n">Stok</th><th className="n">Harga jual</th><th className="n">Harga beli</th><th className="n">Nilai</th><th>Status</th><th></th></tr></thead>
                 <tbody>
-                  {!ready && skRows(6)}
+                  {!ready && skRows(8)}
                   {ready && filtered.map((i) => (
                     <tr key={i.id}>
                       <td><div className="prod"><span className="av" style={{ background: `hsl(${hue(i.name)} 70% 92%)`, color: `hsl(${hue(i.name)} 55% 32%)` }}>{i.name[0]?.toUpperCase()}</span><div><b>{i.name}</b>{i.barcode && <small className="block">{i.barcode}</small>}</div></div></td>
                       <td><span className="chip">{i.category}</span></td>
                       <td className="n"><b>{i.stock}</b> <small>pcs</small></td>
                       <td className="n">{rupiah(parseHarga(i.price))}</td>
+                      <td className="n">{i.harga_beli ? rupiah(parseHarga(i.harga_beli)) : <span className="muted">–</span>}</td>
+                      <td className="n">{i.stock ? <b>{rupiah(nilaiBeli(i))}</b> : <span className="muted">–</span>}</td>
                       <td><Badge s={status(i)} /></td>
                       <td className="act">
                         <button className="iconbtn sm" aria-label="Ubah" title="Ubah" onClick={() => setForm({ ...i, barcode: i.barcode ?? '', stock: String(i.stock), minStock: String(i.minStock ?? '') })}><Icon n="edit" s={15} /></button>
@@ -732,7 +752,7 @@ export default function App() {
                     </tr>
                   ))}
                   {ready && !filtered.length && (
-                    <tr><td colSpan="6">
+                    <tr><td colSpan="8">
                       {items.length ? <EmptyState icon="search" title="Tidak ada produk yang cocok" text="Coba ubah kata kunci atau filter." />
                         : <EmptyState title="Belum ada produk" text="Tambahkan produk pertama untuk mulai memantau stok." action={<button className="btn" onClick={() => setForm(emptyForm)}><Icon n="plus" /> Tambah produk</button>} />}
                     </td></tr>

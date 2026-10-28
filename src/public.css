@@ -98,6 +98,7 @@
 .pb-back{align-self:flex-start;background:none;border:0;padding:6px 0;color:var(--mut);font-weight:500;cursor:pointer}
 .pb-back:hover{color:var(--ink)}
 .pb-form{width:100%;max-width:400px;margin:auto;display:flex;flex-direction:column;gap:18px;padding:32px 0}
+.pb-logo-big{display:flex;justify-content:center;margin-bottom:4px}
 .pb-m-brand{display:none}
 .pb-form h1{font-family:'Fraunces',serif;font-weight:700;font-size:2.1rem;letter-spacing:-.01em;line-height:1.15}
 .pb-sub{color:var(--mut);margin-top:6px}

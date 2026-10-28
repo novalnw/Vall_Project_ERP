@@ -13,9 +13,9 @@ export const ROLE_DESC = {
 };
   const ACCESS = {
   owner: '*',
-  admin: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan', 'ai_struk'],
-  kasir: ['ringkasan', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan', 'ai_struk'],
-  gudang: ['ringkasan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'mutasi', 'riwayat', 'ai_struk'],
+  admin: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan', 'ai_struk'],
+  kasir: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan', 'ai_struk'],
+  gudang: ['ringkasan', 'analitik', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'mutasi', 'riwayat', 'ai_struk'],
   pelanggan: ['p_beranda', 'p_pesan', 'p_pesanan', 'p_invoice', 'p_profil'],
 };
 // menu portal (p_*) hanya untuk pelanggan; menu ERP hanya untuk staf

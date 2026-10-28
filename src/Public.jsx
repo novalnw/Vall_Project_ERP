@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react';
 import './public.css';
+import LogoVall from './assets/LogoVall.jpeg';
 
-function Mark({ size = 30 }) {
+function Mark({ size = 52 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-      <polygon points="20,4 35,12 20,20 5,12" fill="#0000" />
-      <polygon points="5,12 20,20 20,37 5,29" fill="#2F6B4F" />
-      <polygon points="35,12 20,20 20,37 35,29" fill="#1F4A36" />
-      <polygon points="26,7.2 29,8.8 14,16.8 11,15.2" fill="#C2410C" />
-      <polygon points="11,15.2 14,16.8 14,33.8 11,32.2" fill="#C2410C" />
-    </svg>
+    <img src={LogoVall} alt="Logo VALL Dev" width={size} height={size} style={{ borderRadius: '50%', objectFit: 'cover' }} />
   );
 }
 
-function Brand({ dark, size = 30 }) {
+function Brand({ dark, size = 52 }) {
   return (
     <span className={'pb-brand' + (dark ? ' on-dark' : '')}>
       <Mark size={size} />
@@ -166,7 +161,7 @@ function Auth({ p, theme, toggleTheme }) {
   return (
     <div className="pub pb-auth" data-theme={theme}>
       <aside className="pb-side">
-        <Brand dark size={34} />
+        <Brand dark size={56} />
         <div>
           <h2>{c.side}</h2>
           <ol>
@@ -187,6 +182,7 @@ function Auth({ p, theme, toggleTheme }) {
         </div>
 
         <form className="pb-form" onSubmit={submit}>
+          <div className="pb-logo-big"><Mark size={120} /></div>
           <div className="pb-m-brand"><Brand /></div>
           <div>
             <h1>{c.title}</h1>
