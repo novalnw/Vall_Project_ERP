@@ -84,10 +84,33 @@ export function Log() {
 }
 
 // ================= Pengaturan =================
+const TABEL_RESET = [
+  'invoice_item', 'pembayaran', 'pembayaran_klaim', 'pesanan_item', 'pesanan', 'invoice',
+  'po_item', 'penerimaan', 'purchase_order', 'opname_logs', 'stok_mutasi',
+  'kas_mutasi', 'pengeluaran', 'log_aktivitas', 'harga_supplier',
+  'inventory', 'supplier', 'pelanggan',
+];
+
 export function Pengaturan({ notify, user }) {
   const [cfg, reload] = usePengaturan();
   const [f, setF] = useState(cfg);
+  const [busy, setBusy] = useState(false);
   useEffect(() => { setF(cfg); }, [cfg]);
+
+  async function bersihkan() {
+    if (!window.confirm('Yakin mau hapus SEMUA data (invoice, mutasi stok, pembelian, kas, produk, pelanggan, log)? Tindakan ini tidak bisa dibatalkan.')) return;
+    if (!window.confirm('Terakhir: lanjutkan dan hapus semua data?')) return;
+    setBusy(true);
+    const errs = [];
+    for (const t of TABEL_RESET) {
+      const { error } = await supabase.from(t).delete().neq('id', 0);
+      if (error) errs.push(`${t}: ${error.message}`);
+    }
+    setBusy(false);
+    logAct(user, 'Reset data', 'hapus semua data');
+    if (errs.length) notify('Sebagian gagal: ' + errs.join('; '), 'err');
+    else notify('Semua data berhasil dibersihkan.');
+  }
 
   async function save(e) {
     e.preventDefault();
@@ -101,6 +124,7 @@ export function Pengaturan({ notify, user }) {
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   return (
+    <>
     <form className="card mform" style={{ maxWidth: 640 }} onSubmit={save}>
       <h3>Profil usaha</h3>
       <Field label="Nama usaha"><input required value={f.nama_usaha || ''} onChange={set('nama_usaha')} /></Field>
@@ -120,5 +144,14 @@ export function Pengaturan({ notify, user }) {
       </Field>
       <div className="row end"><button className="btn">Simpan pengaturan</button></div>
     </form>
+
+    <section className="card" style={{ maxWidth: 640, marginTop: 18 }}>
+      <h3>Bersihkan data (reset)</h3>
+      <p className="muted small">Hapus SEMUA data transaksi &amp; master: invoice, mutasi stok, pembelian, kas, produk, supplier, pelanggan, dan log aktivitas. Pengguna, akun kas, dan pengaturan usaha tetap aman. Gunakan saat mau mulai dari nol / setelah uji coba data dummy.</p>
+      <div className="row end">
+        <button type="button" className="btn ghost danger-t" disabled={busy} onClick={bersihkan}>{busy ? 'Membersihkan…' : 'Bersihkan semua data'}</button>
+      </div>
+    </section>
+    </>
   );
 }

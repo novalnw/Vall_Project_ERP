@@ -7,15 +7,15 @@ export const ROLES = { owner: 'Pemilik usaha', admin: 'Admin', kasir: 'Kasir', g
 export const ROLE_DESC = {
   owner: 'Semua menu, termasuk peran & akses.',
   admin: 'Semua menu kecuali peran & akses.',
-  kasir: 'Invoice, pembayaran, pelanggan, produk, dan laporan penjualan.',
+  kasir: 'Invoice, pembayaran, pelanggan, produk, laporan penjualan, dan laporan mutasi stok.',
   gudang: 'Produk, supplier, PO, penerimaan, harga supplier, opname, dan mutasi stok.',
   pelanggan: 'Portal pelanggan: katalog, invoice, dan pembayaran miliknya sendiri.',
 };
   const ACCESS = {
   owner: '*',
-  admin: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan', 'ai_struk'],
-  kasir: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan', 'ai_struk'],
-  gudang: ['ringkasan', 'analitik', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'mutasi', 'riwayat', 'ai_struk'],
+  admin: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pengeluaran', 'kas', 'log', 'pelanggan', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'import', 'lap_jual', 'lap_pelanggan', 'mutasi', 'laba_rugi', 'riwayat', 'pengaturan', 'ai_struk'],
+  kasir: ['ringkasan', 'analitik', 'invoice_baru', 'invoice', 'pembayaran', 'pesanan', 'konfirmasi', 'pelanggan', 'barang', 'lap_jual', 'lap_pelanggan', 'opname', 'import', 'ai_struk'],
+  gudang: ['ringkasan', 'analitik', 'barang', 'supplier', 'po', 'terima', 'harga_supplier', 'opname', 'import', 'mutasi', 'riwayat', 'ai_struk'],
   pelanggan: ['p_beranda', 'p_pesan', 'p_pesanan', 'p_invoice', 'p_profil'],
 };
 // menu portal (p_*) hanya untuk pelanggan; menu ERP hanya untuk staf

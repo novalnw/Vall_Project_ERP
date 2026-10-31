@@ -109,3 +109,16 @@ textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79
 .badge.st-habis,.badge.st-segera{background:var(--bad-soft);color:var(--bad-ink)}
 .badge.st-perlu{background:var(--warn-soft);color:var(--warn-ink)}
 .badge.st-aman{background:var(--ok-soft);color:var(--ok-ink)}
+
+/* ===== Import data ===== */
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{background:var(--surface);border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:99px;font:inherit;font-weight:600;font-size:.88rem;cursor:pointer}
+.seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.updrop{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;
+  border:1.5px dashed var(--line);border-radius:16px;background:var(--surface);padding:28px 16px;transition:border-color .15s,background .15s}
+.updrop:hover{border-color:var(--pri);background:var(--pri-soft)}
+.updrop input{display:none}
+.updrop b{font-size:1rem}
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.erlist{margin:12px 0 0;padding-left:18px;color:var(--bad-ink);font-size:.88rem;display:flex;flex-direction:column;gap:4px}
+@media(max-width:520px){.mapgrid{grid-template-columns:1fr}}

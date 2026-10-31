@@ -11,6 +11,8 @@ import { BuatInvoice, DaftarInvoice } from './erp/Invoice';
 import { Pembayaran, Pengeluaran, KasBank } from './erp/Keuangan';
 import { PurchaseOrder, Penerimaan } from './erp/Pembelian';
 import { LaporanPenjualan, PenjualanPelanggan, MutasiBarang, LabaRugi, FinanceSummary } from './erp/Laporan';
+import LaporanMutasiStok from './erp/MutasiStok';
+import ImportData from './erp/Import';
 import Analitik from './erp/Analitik';
 import { Roles, Log, Pengaturan } from './erp/Sistem';
 import { PortalBeranda, PortalPesan, PortalPesanan, PortalInvoice, PortalProfil } from './erp/Portal';
@@ -91,11 +93,12 @@ const MENU = [
     ['po', 'cart', 'Purchase order'],
     ['terima', 'inbox', 'Penerimaan barang'],
     ['harga_supplier', 'tag', 'Harga supplier'],
-    ['opname', 'clipboard', 'Stock opname'],
+    ['import', 'upload', 'Import data'],
   ]],
   ['LAPORAN', [
     ['lap_jual', 'chart', 'Laporan penjualan'],
     ['lap_pelanggan', 'users', 'Penjualan per pelanggan'],
+    ['opname', 'swap', 'Laporan mutasi stok'],
     ['mutasi', 'swap', 'Mutasi per barang'],
     ['laba_rugi', 'trend', 'Laba rugi'],
     ['riwayat', 'history', 'Riwayat opname'],
@@ -140,6 +143,7 @@ const ICONS = {
   chart: <path d="M18 20V10M12 20V4M6 20v-6" />,
   trend: <><path d="M23 6l-9.5 9.5-5-5L1 18" /><path d="M17 6h6v6" /></>,
   swap: <><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 014-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 01-4 4H3" /></>,
+  upload: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v12" /></>,
   menu: <path d="M3 6h18M3 12h18M3 18h18" />,
   close: <path d="M18 6L6 18M6 6l12 12" />,
   settings: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
@@ -213,6 +217,7 @@ export default function App() {
   const [fStatus, setFStatus] = useState('');
   const [counts, setCounts] = useState({});
   const [onlyDiff, setOnlyDiff] = useState(false);
+  const [opnameMode, setOpnameMode] = useState(false); // true = mode hitung fisik opname, false = laporan mutasi
 
   // Scan barcode
   const [scanCode, setScanCode] = useState('');
@@ -528,7 +533,8 @@ export default function App() {
     po: ['Purchase order', 'Pesanan pembelian ke supplier'],
     terima: ['Penerimaan barang', 'Barang dari PO menambah stok'],
     harga_supplier: ['Harga supplier', 'Bandingkan harga beli antar supplier'],
-    opname: ['Stock opname', 'Cocokkan stok fisik dengan stok sistem'],
+    opname: ['Laporan mutasi stok', 'Riwayat pergerakan stok: masuk, keluar, retur, penyesuaian'],
+    import: ['Import data', 'Upload file CSV/Excel untuk mengisi data secara massal'],
     lap_jual: ['Laporan penjualan', 'Rekap invoice per periode'],
     lap_pelanggan: ['Penjualan per pelanggan', 'Pelanggan dengan kontribusi terbesar'],
     mutasi: ['Mutasi per barang', 'Riwayat keluar masuk stok'],
@@ -543,7 +549,7 @@ export default function App() {
   };
   const allowed = can(role, tab) || (tab === 'roles' && role === 'owner');
   const cur = allowed ? tab : 'denied';
-  const go = (k) => { setTab(k); setQ(''); setMenuOpen(false); window.scrollTo(0, 0); };
+  const go = (k) => { if (k !== 'opname') setOpnameMode(false); setTab(k); setQ(''); setMenuOpen(false); window.scrollTo(0, 0); };
   const P = { notify, ask: setConfirmBox, user: session?.user?.email, items, reload: fetchItems };
 
   const skRows = (cols) => [1, 2, 3].map((n) => <tr key={n}><td colSpan={cols}><div className="sk" style={{ height: 20 }} /></td></tr>);
@@ -618,6 +624,7 @@ export default function App() {
         {cur === 'po' && <PurchaseOrder {...P} />}
         {cur === 'terima' && <Penerimaan {...P} />}
         {cur === 'harga_supplier' && <HargaSupplier {...P} />}
+        {cur === 'import' && <ImportData {...P} />}
         {cur === 'lap_jual' && <LaporanPenjualan />}
         {cur === 'lap_pelanggan' && <PenjualanPelanggan />}
         {cur === 'mutasi' && <MutasiBarang items={items} />}
@@ -639,7 +646,7 @@ export default function App() {
             <div className="actions">
               {can(role, 'invoice_baru') && <button className="btn" onClick={() => go('invoice_baru')}><Icon n="filePlus" /> Buat invoice</button>}
               <button className="btn ghost" onClick={() => { go('barang'); setForm(emptyForm); }}><Icon n="plus" /> Tambah produk</button>
-              <button className="btn ghost" onClick={() => go('opname')}><Icon n="clipboard" /> Mulai opname</button>
+              <button className="btn ghost" onClick={() => { setOpnameMode(true); go('opname'); }}><Icon n="clipboard" /> Mulai opname</button>
             </div>
 
             {can(role, 'laba_rugi') && <FinanceSummary />}
@@ -763,9 +770,12 @@ export default function App() {
           </>
         )}
 
-        {/* ===== STOCK OPNAME ===== */}
-        {cur === 'opname' && (
+        {/* ===== LAPORAN MUTASI STOK / STOCK OPNAME ===== */}
+        {cur === 'opname' && (opnameMode ? (
           <>
+            <div className="actions">
+              <button className="btn ghost" onClick={() => setOpnameMode(false)}><Icon n="swap" /> Kembali ke laporan mutasi</button>
+            </div>
             <section className="card opbar">
               <div className="opprog">
                 <div className="barhead"><span>{counted} dari {items.length} barang sudah dihitung</span><b>{diffCount} selisih</b></div>
@@ -819,7 +829,9 @@ export default function App() {
               </table>
             </div>
           </>
-        )}
+        ) : (
+          <LaporanMutasiStok items={items} onOpname={() => setOpnameMode(true)} notify={notify} reload={fetchItems} user={session?.user?.email} />
+        ))}
 
         {/* ===== RIWAYAT OPNAME ===== */}
         {cur === 'riwayat' && (
