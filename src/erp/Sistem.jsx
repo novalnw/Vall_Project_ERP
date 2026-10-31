@@ -106,10 +106,13 @@ export function Pengaturan({ notify, user }) {
       const { error } = await supabase.from(t).delete().neq('id', 0);
       if (error) errs.push(`${t}: ${error.message}`);
     }
+    // Setel ulang saldo awal semua akun kas/bank ke 0 (mulai benar-benar dari nol).
+    const { error: e2 } = await supabase.from('akun_kas').update({ saldo_awal: 0 }).gte('id', 0);
+    if (e2) errs.push('akun_kas (reset saldo): ' + e2.message);
     setBusy(false);
-    logAct(user, 'Reset data', 'hapus semua data');
+    logAct(user, 'Reset data', 'hapus semua data + saldo kas 0');
     if (errs.length) notify('Sebagian gagal: ' + errs.join('; '), 'err');
-    else notify('Semua data berhasil dibersihkan.');
+    else notify('Semua data berhasil dibersihkan. Saldo kas/bank kembali 0.');
   }
 
   async function save(e) {
@@ -147,7 +150,7 @@ export function Pengaturan({ notify, user }) {
 
     <section className="card" style={{ maxWidth: 640, marginTop: 18 }}>
       <h3>Bersihkan data (reset)</h3>
-      <p className="muted small">Hapus SEMUA data transaksi &amp; master: invoice, mutasi stok, pembelian, kas, produk, supplier, pelanggan, dan log aktivitas. Pengguna, akun kas, dan pengaturan usaha tetap aman. Gunakan saat mau mulai dari nol / setelah uji coba data dummy.</p>
+      <p className="muted small">Hapus SEMUA data transaksi &amp; master: invoice, mutasi stok, pembelian, kas, produk, supplier, pelanggan, dan log aktivitas. Saldo semua akun kas/bank disetel kembali ke 0. Pengguna &amp; pengaturan usaha tetap aman. Gunakan saat mau mulai dari nol / setelah uji coba data dummy.</p>
       <div className="row end">
         <button type="button" className="btn ghost danger-t" disabled={busy} onClick={bersihkan}>{busy ? 'Membersihkan…' : 'Bersihkan semua data'}</button>
       </div>

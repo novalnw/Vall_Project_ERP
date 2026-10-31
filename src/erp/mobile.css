@@ -102,4 +102,21 @@
 
   /* ---- Notifikasi ---- */
   body .toast{left:12px;right:12px;bottom:16px;max-width:none}
+
+  /* ---- Kotak barisan modul (tablet) ---- */
+  .modboxes{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+}
+
+@media(max-width:560px){
+  /* ---- Kotak barisan modul (HP) ---- */
+  .modboxes{grid-template-columns:repeat(2,1fr);gap:10px}
+  .modbox{padding:12px}
+  .modbox .mb-icon{width:32px;height:32px}
+  .modbox b{font-size:.9rem}
+  .modbox small{font-size:.72rem}
+
+  /* ---- Import: pastikan menu/tombol tidak mepet ---- */
+  .seg{gap:6px}
+  .seg button{flex:1 1 auto;padding:9px 10px;font-size:.82rem;text-align:center}
+  .mapgrid{grid-template-columns:1fr}
 }

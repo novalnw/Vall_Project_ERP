@@ -110,6 +110,15 @@ textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79
 .badge.st-perlu{background:var(--warn-soft);color:var(--warn-ink)}
 .badge.st-aman{background:var(--ok-soft);color:var(--ok-ink)}
 
+/* ===== Kotak barisan modul (dashboard) ===== */
+.modboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.modbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);transition:transform .12s,border-color .12s;font:inherit;color:inherit}
+.modbox:hover{border-color:var(--pri);transform:translateY(-2px)}
+.modbox .mb-icon{width:36px;height:36px;border-radius:10px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center}
+.modbox b{font-size:.92rem}
+.modbox small{color:var(--mut);font-size:.76rem;line-height:1.3;display:block}
+@media(max-width:520px){.modboxes{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+
 /* ===== Import data ===== */
 .seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .seg button{background:var(--surface);border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:99px;font:inherit;font-weight:600;font-size:.88rem;cursor:pointer}

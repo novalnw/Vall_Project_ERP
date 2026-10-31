@@ -106,6 +106,17 @@ const MENU = [
   ['SISTEM', [['pengaturan', 'settings', 'Pengaturan']]],
 ];
 
+const MODULES = [
+  ['ringkasan', 'grid', 'Dashboard', 'Ringkasan kondisi bisnis'],
+  ['barang', 'box', 'Produk', 'Kelola stok & harga'],
+  ['invoice_baru', 'filePlus', 'Buat invoice', 'Catat penjualan'],
+  ['pelanggan', 'users', 'Pelanggan', 'Data pelanggan'],
+  ['terima', 'inbox', 'Penerimaan', 'Terima barang PO'],
+  ['kas', 'bank', 'Kas & bank', 'Saldo & mutasi kas'],
+  ['opname', 'swap', 'Mutasi stok', 'Laporan pergerakan stok'],
+  ['lap_jual', 'chart', 'Laporan penjualan', 'Rekap per periode'],
+];
+
 // ================= Ikon & Logo =================
 const ICONS = {
   grid: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></>,
@@ -643,6 +654,14 @@ export default function App() {
         {/* ===== DASHBOARD ===== */}
         {cur === 'ringkasan' && (
           <>
+            <div className="modboxes">
+              {MODULES.map((m) => can(role, m[0]) && (
+                <button key={m[0]} className="modbox" onClick={() => go(m[0])}>
+                  <span className="mb-icon"><Icon n={m[1]} /></span>
+                  <b>{m[2]}</b><small>{m[3]}</small>
+                </button>
+              ))}
+            </div>
             <div className="actions">
               {can(role, 'invoice_baru') && <button className="btn" onClick={() => go('invoice_baru')}><Icon n="filePlus" /> Buat invoice</button>}
               <button className="btn ghost" onClick={() => { go('barang'); setForm(emptyForm); }}><Icon n="plus" /> Tambah produk</button>
